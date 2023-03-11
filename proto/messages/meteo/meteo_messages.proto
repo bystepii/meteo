@@ -1,0 +1,19 @@
+// meteo_messages.proto
+// Define the messages that describe the meteorological data
+
+syntax = "proto3";
+
+package meteo;
+
+import "google/protobuf/timestamp.proto";
+
+message RawMeteoData {
+  float temperature = 1;
+  float humidity = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message RawPollutionData {
+  int32 co2 = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}

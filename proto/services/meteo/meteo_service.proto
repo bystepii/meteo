@@ -1,0 +1,14 @@
+// meteo_service.proto
+// Defines the meteorological service. This service is used to send meteorological data to the server.
+
+syntax = "proto3";
+
+package meteo;
+
+import "google/protobuf/empty.proto";
+import "proto/messages/meteo/meteo_messages.proto";
+
+service MeteoService {
+  rpc SendMeteoData (RawMeteoData) returns (google.protobuf.Empty);
+  rpc SendPollutionData (RawPollutionData) returns (google.protobuf.Empty);
+}

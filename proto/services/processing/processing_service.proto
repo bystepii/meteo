@@ -1,0 +1,14 @@
+// processing_service.proto
+// Defines the processing service. This service is used to process the meteorological data.
+
+syntax = "proto3";
+
+package meteo;
+
+import "google/protobuf/empty.proto";
+import "proto/messages/meteo/meteo_messages.proto";
+
+service ProcessingService {
+  rpc ProcessMeteoData (RawMeteoData) returns (google.protobuf.Empty);
+  rpc ProcessPollutionData (RawPollutionData) returns (google.protobuf.Empty);
+}

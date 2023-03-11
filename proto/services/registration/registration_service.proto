@@ -1,0 +1,22 @@
+// registration_service.proto
+// Define the service for registering and unregistering servers and/or terminals
+
+syntax = "proto3";
+
+package registration;
+
+import "google/protobuf/empty.proto";
+
+service RegistrationService {
+  rpc Register(Address) returns (RegisterResponse) {}
+  rpc Unregister(Address) returns (google.protobuf.Empty) {}
+}
+
+message Address {
+  string address = 1;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string error_message = 2;
+}

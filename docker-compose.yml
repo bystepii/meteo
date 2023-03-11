@@ -1,0 +1,6 @@
+services:
+  load-balancer:
+    image: meteo/load-balancer
+    build:
+        context: .
+        dockerfile: load_balancer/Dockerfile
