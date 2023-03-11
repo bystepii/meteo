@@ -7,7 +7,8 @@ from proto.services.registration import registration_service_pb2 as proto_dot_se
 
 
 class RegistrationServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """RegistrationService is used to register and unregister servers and/or terminals
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -28,16 +29,19 @@ class RegistrationServiceStub(object):
 
 
 class RegistrationServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """RegistrationService is used to register and unregister servers and/or terminals
+    """
 
     def Register(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Register a server or terminal
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Unregister(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Unregister a server or terminal
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -63,7 +67,8 @@ def add_RegistrationServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class RegistrationService(object):
-    """Missing associated documentation comment in .proto file."""
+    """RegistrationService is used to register and unregister servers and/or terminals
+    """
 
     @staticmethod
     def Register(request,

@@ -7,7 +7,8 @@ from proto.services.terminal import termnial_service_pb2 as proto_dot_services_d
 
 
 class TerminalServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """TerminalService is the service that is used to connect to a terminal
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -23,10 +24,12 @@ class TerminalServiceStub(object):
 
 
 class TerminalServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """TerminalService is the service that is used to connect to a terminal
+    """
 
     def SendResults(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Send processed data to the terminal
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -47,7 +50,8 @@ def add_TerminalServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class TerminalService(object):
-    """Missing associated documentation comment in .proto file."""
+    """TerminalService is the service that is used to connect to a terminal
+    """
 
     @staticmethod
     def SendResults(request,

@@ -8,7 +8,10 @@ package terminal;
 
 import "google/protobuf/empty.proto";
 
+// TerminalService is the service that is used to connect to a terminal
 service TerminalService {
+
+  // Send processed data to the terminal
   rpc SendResults (Results) returns (google.protobuf.Empty);
 }
 

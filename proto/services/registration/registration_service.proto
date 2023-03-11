@@ -7,8 +7,13 @@ package registration;
 
 import "google/protobuf/empty.proto";
 
+// RegistrationService is used to register and unregister servers and/or terminals
 service RegistrationService {
+
+  // Register a server or terminal
   rpc Register(Address) returns (RegisterResponse) {}
+
+  // Unregister a server or terminal
   rpc Unregister(Address) returns (google.protobuf.Empty) {}
 }
 

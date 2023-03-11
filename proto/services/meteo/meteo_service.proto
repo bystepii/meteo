@@ -1,5 +1,5 @@
 // meteo_service.proto
-// Defines the meteorological service. This service is used to send meteorological data to the server.
+// Define the meteorological service
 
 syntax = "proto3";
 
@@ -8,7 +8,12 @@ package meteo;
 import "google/protobuf/empty.proto";
 import "proto/messages/meteo/meteo_messages.proto";
 
+// MeteoService is used to send meteorological data to the server
 service MeteoService {
+
+  // Send meteorological data to the server
   rpc SendMeteoData (RawMeteoData) returns (google.protobuf.Empty);
+
+  // Send pollution data to the server
   rpc SendPollutionData (RawPollutionData) returns (google.protobuf.Empty);
 }

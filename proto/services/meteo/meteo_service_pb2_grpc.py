@@ -7,7 +7,8 @@ from proto.messages.meteo import meteo_messages_pb2 as proto_dot_messages_dot_me
 
 
 class MeteoServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """MeteoService is used to send meteorological data to the server
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -28,16 +29,19 @@ class MeteoServiceStub(object):
 
 
 class MeteoServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """MeteoService is used to send meteorological data to the server
+    """
 
     def SendMeteoData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Send meteorological data to the server
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendPollutionData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Send pollution data to the server
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -63,7 +67,8 @@ def add_MeteoServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class MeteoService(object):
-    """Missing associated documentation comment in .proto file."""
+    """MeteoService is used to send meteorological data to the server
+    """
 
     @staticmethod
     def SendMeteoData(request,
