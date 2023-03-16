@@ -21,4 +21,5 @@ RUN python -m grpc_tools.protoc -I./ --python_out=. \
     ./proto/services/registration/registration_service.proto \
     ./proto/services/processing/processing_service.proto
 
-CMD ["python", "load_balancer/main.py"]
+ENV PYTHONPATH "${PYTHONPATH}:/app"
+ENTRYPOINT ["python", "load_balancer/main.py"]
