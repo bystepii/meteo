@@ -17,6 +17,7 @@ RUN python -m grpc_tools.protoc -I./ --python_out=. \
     --grpc_python_out=. --pyi_out=. \
     ./proto/messages/meteo/meteo_messages.proto \
     ./proto/services/meteo/meteo_service.proto \
-    ./proto/services/registration/registration_service.proto
+    ./proto/services/registration/registration_service.proto \
+    ./proto/services/processing/processing_service.proto
 
 CMD ["python", "main.py"]
