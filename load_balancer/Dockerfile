@@ -1,13 +1,14 @@
 FROM python:alpine
 
 RUN mkdir /app
-COPY load_balancer /app
+COPY load_balancer /app/load_balancer
 COPY common /app/common
 COPY requirements.txt /app
 
 COPY proto/messages/meteo /app/proto/messages/meteo
 COPY proto/services/meteo /app/proto/services/meteo
 COPY proto/services/registration /app/proto/services/registration
+COPY proto/services/processing /app/proto/services/processing
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
@@ -20,4 +21,4 @@ RUN python -m grpc_tools.protoc -I./ --python_out=. \
     ./proto/services/registration/registration_service.proto \
     ./proto/services/processing/processing_service.proto
 
-CMD ["python", "main.py"]
+CMD ["python", "load_balancer/main.py"]
