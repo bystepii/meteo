@@ -1,7 +1,16 @@
+from __future__ import annotations
+
+import logging
 import random
+from abc import ABC, abstractmethod
+from typing import Sequence
+
+import grpc
 
 from common.observer import Observer
 from common.registration_service import RegistrationService
+from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
+from proto.services.processing.processing_service_pb2_grpc import ProcessingServiceStub
 
 
 class LoadBalancer(Observer):
@@ -9,20 +18,86 @@ class LoadBalancer(Observer):
     A simple load balancer that rotates through a list of servers.
     """
 
-    def __init__(self, registration_service: RegistrationService):
+    def __init__(self, registration_service: RegistrationService, strategy: LoadBalancingStrategy = None):
+        logging.info("Initializing LoadBalancer")
         self._registration_service = registration_service
-        self._addresses = registration_service.get_addresses()
+        self._strategy = strategy or RoundRobinLoadBalancingStrategy(list(registration_service.get_addresses()))
+        self._channels = {}
         self._index = 0
 
         registration_service.attach(self)
 
-    def get_random_address(self) -> str:
-        return random.choice(list(self._addresses))
+    def update(self, subject: RegistrationService):
+        addresses = subject.get_addresses()
+        logging.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
+        self._strategy.update(list(addresses))
+        self._channels = {address: grpc.insecure_channel(address) for address in addresses}
 
-    def get_next_address(self) -> str:
+    def send_meteo_data(self, meteo_data: RawMeteoData):
+        logging.debug(f"Received meteo data {meteo_data}")
+        address = self._strategy.get_address()
+        channel = self._channels[address]
+        stub = ProcessingServiceStub(channel)
+        logging.debug(f"Sending meteo data to {address}")
+        stub.ProcessMeteoData(meteo_data)
+
+    def send_pollution_data(self, pollution_data: RawPollutionData):
+        logging.debug(f"Received pollution data {pollution_data}")
+        address = self._strategy.get_address()
+        channel = self._channels[address]
+        stub = ProcessingServiceStub(channel)
+        logging.debug(f"Sending pollution data to {address}")
+        stub.ProcessPollutionData(pollution_data)
+
+
+class LoadBalancingStrategy(ABC):
+    """
+    A load balancing strategy.
+    """
+
+    @abstractmethod
+    def get_address(self) -> str:
+        """
+        Returns the address to send the next request to.
+        """
+        pass
+
+    @abstractmethod
+    def update(self, addresses: Sequence[str]):
+        """
+        Updates the list of addresses.
+        """
+        pass
+
+
+class RandomLoadBalancingStrategy(LoadBalancingStrategy):
+    """
+    A load balancing strategy that chooses a random address from the list of addresses.
+    """
+
+    def __init__(self, addresses: Sequence[str]):
+        self._addresses = addresses
+
+    def get_address(self) -> str:
+        return random.choice(self._addresses)
+
+    def update(self, addresses: Sequence[str]):
+        self._addresses = addresses
+
+
+class RoundRobinLoadBalancingStrategy(LoadBalancingStrategy):
+    """
+    A load balancing strategy that rotates through a list of addresses.
+    """
+
+    def __init__(self, addresses: Sequence[str]):
+        self._addresses = addresses
+        self._index = 0
+
+    def get_address(self) -> str:
         address = self._addresses[self._index]
         self._index = (self._index + 1) % len(self._addresses)
         return address
 
-    def update(self, subject: RegistrationService):
-        self._addresses = subject.get_addresses()
+    def update(self, addresses: Sequence[str]):
+        self._addresses = addresses
