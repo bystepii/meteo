@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from logging import config
 
 LOGGER_LEVEL = 'info'
@@ -10,9 +10,9 @@ LOGGER_LEVEL_CHOICES = ["debug", "info", "warning", "error", "critical"]
 
 
 def setup_logger(
-    log_level=LOGGER_LEVEL,
-    log_format=LOGGER_FORMAT,
-    stream=LOGGER_STREAM, filename=None
+        log_level=LOGGER_LEVEL,
+        log_format=LOGGER_FORMAT,
+        stream=LOGGER_STREAM, filename=None
 ):
     if log_level is None or str(log_level).lower() == 'none':
         return
