@@ -15,12 +15,12 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
         self._registration_service = registration_service
 
     def Register(self, address: Address, context) -> RegisterResponse:
-        logger.debug(f'Received registration request for {address.address}')
+        logger.debug(f"Received registration request for {address.address}")
         response = RegisterResponse()
         response.success = self._registration_service.register(address.address)
         return response
 
     def Unregister(self, address: Address, context) -> Empty:
-        logger.debug(f'Received unregistration request for {address.address}')
+        logger.debug(f"Received unregistration request for {address.address}")
         self._registration_service.unregister(address.address)
         return Empty()

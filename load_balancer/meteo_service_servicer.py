@@ -15,11 +15,11 @@ class MeteoServiceServicer(meteo_service_pb2_grpc.MeteoServiceServicer):
         self._meteo_service = meteo_service
 
     def SendMeteoData(self, meteo_data: RawMeteoData, context) -> Empty:
-        logger.debug(f'Received meteo data {meteo_data}')
+        logger.debug(f"Received meteo data {meteo_data}")
         self._meteo_service.send_meteo_data(meteo_data)
         return Empty()
 
     def SendPollutionData(self, pollution_data: RawPollutionData, context) -> Empty:
-        logger.debug(f'Received pollution data {pollution_data}')
+        logger.debug(f"Received pollution data {pollution_data}")
         self._meteo_service.send_pollution_data(pollution_data)
         return Empty()
