@@ -1,10 +1,13 @@
 import logging
+import os
 import time
 from concurrent import futures
+from typing import Optional
 
+import click
 import grpc
 
-from common.log import setup_logger
+from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.registration_service import RegistrationService
 from load_balancer.lb import LoadBalancer
 from load_balancer.meteo_service import MeteoService
@@ -15,8 +18,21 @@ from proto.services.registration import registration_service_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PORT = 50051
 
-def main():
+
+@click.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.option('--debug', is_flag=True, help="Enable debug logging")
+@click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
+              default='info', help="Set the log level")
+@click.option('--port', type=int, help="Set the port")
+def main(debug: bool = False, log_level: str = 'info', port: Optional[int] = None):
+    setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
+
+    logger.info("Starting load balancer")
+
+    port = port or os.environ.get("PORT", DEFAULT_PORT)
+
     # Create a gRPC server
     logger.info("Creating gRPC server")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -48,7 +64,7 @@ def main():
 
     # Listen on port 50051
     logger.info("Starting gRPC server")
-    server.add_insecure_port("[::]:50051")
+    server.add_insecure_port("[::]:{}".format(port))
     server.start()
 
     logger.info("gRPC server started successfully")
@@ -62,5 +78,4 @@ def main():
 
 
 if __name__ == '__main__':
-    setup_logger()
     main()
