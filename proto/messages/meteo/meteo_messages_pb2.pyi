@@ -19,6 +19,6 @@ class RawPollutionData(_message.Message):
     __slots__ = ["co2", "timestamp"]
     CO2_FIELD_NUMBER: _ClassVar[int]
     TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
-    co2: int
+    co2: float
     timestamp: _timestamp_pb2.Timestamp
-    def __init__(self, co2: _Optional[int] = ..., timestamp: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    def __init__(self, co2: _Optional[float] = ..., timestamp: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
