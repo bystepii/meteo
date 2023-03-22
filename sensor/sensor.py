@@ -21,11 +21,14 @@ class SensorType(Enum):
 
 class Sensor(ABC):
     def __init__(
-            self, sensor_id: str,
+            self,
+            sensor_id: str,
             sensor_type: SensorType,
             meteo: MeteoServiceStub,
             interval: int = DEFAULT_INTERVAL
     ):
+        if not sensor_id:
+            raise ValueError("Sensor id must be provided")
         self._sensor_id = sensor_id
         self._sensor_type = sensor_type
         self._meteo = meteo
@@ -54,42 +57,51 @@ class Sensor(ABC):
             data = self.get_data()
             self.send_data(data)
 
+    def __repr__(self):
+        return f"{self._sensor_type}(id={self._sensor_id}, interval={self._interval})"
+
 
 class AirQualitySensor(Sensor):
     def __init__(self, sensor_id: str, meteo: MeteoServiceStub, interval: int = DEFAULT_INTERVAL):
         super().__init__(sensor_id, SensorType.AirQuality, meteo, interval)
-        logger.info(f"Initializing AirQualitySensor {sensor_id} with interval {interval}")
+        logger.info(f"Initializing {self}")
 
     def get_data(self) -> RawMeteoData:
         data = RawMeteoData()
         air = self._detector.analyze_air()
-        data.timestamp = time.time()
+        data.timestamp.GetCurrentTime()
         data.humidity = air['humidity']
         data.temperature = air['temperature']
-        logger.debug(f"Sensor {self._sensor_id} of type {self._sensor_type} generated data {data}")
+        logger.debug(f"{self} generated data {data}")
         return data
 
     def send_data(self, data: RawMeteoData):
-        logger.debug(f"Sensor {self._sensor_id} of type {self._sensor_type} sending data {data}")
-        self._meteo.SendMeteoData(data)
+        logger.debug(f"{self} sending data {data} to meteo service")
+        try:
+            self._meteo.SendMeteoData(data)
+        except Exception as e:
+            logger.error(f"{self} failed to send data \"{data}\" to meteo service: {e}")
 
 
 class PollutionSensor(Sensor):
     def __init__(self, sensor_id: str, meteo: MeteoServiceStub, interval: int = DEFAULT_INTERVAL):
         super().__init__(sensor_id, SensorType.Pollution, meteo, interval)
-        logger.info(f"Initializing PollutionSensor {sensor_id} with interval {interval}")
+        logger.info(f"Initializing {self}")
 
     def get_data(self) -> RawPollutionData:
         data = RawPollutionData()
         pollution = self._detector.analyze_pollution()
-        data.timestamp = time.time()
+        data.timestamp.GetCurrentTime()
         data.co2 = pollution['co2']
-        logger.debug(f"Sensor {self._sensor_id} of type {self._sensor_type} generated data {data}")
+        logger.debug(f"{self} generated data {data}")
         return data
 
     def send_data(self, data: RawPollutionData):
-        logger.debug(f"Sensor {self._sensor_id} of type {self._sensor_type} sending data {data}")
-        self._meteo.SendPollutionData(data)
+        logger.debug(f"{self} sending data {data} to meteo service")
+        try:
+            self._meteo.SendPollutionData(data)
+        except Exception as e:
+            logger.error(f"{self} failed to send data \"{data}\" to meteo service: {e}")
 
 
 def create_sensor(sensor_id: str, sensor_type: SensorType, meteo: MeteoServiceStub) -> Sensor:

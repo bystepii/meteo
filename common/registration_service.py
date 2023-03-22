@@ -20,17 +20,17 @@ class RegistrationService(Observable):
 
     def register(self, address: str) -> bool:
         if address in self._addresses:
-            logger.warning(f"{self._parent_service} tried to register already registered address {address}")
+            logger.warning(f"{self} tried to register already registered address {address}")
             return False
         self._addresses.add(address)
-        logger.info(f"{self._parent_service} registered address {address}")
+        logger.info(f"{self} registered address {address}")
         self.notify()
         return True
 
     def unregister(self, address: str):
         try:
             self._addresses.remove(address)
-            logger.info(f"{self._parent_service} unregistered address {address}")
+            logger.info(f"{self} unregistered address {address}")
             self.notify()
         except KeyError:
             pass
@@ -40,12 +40,15 @@ class RegistrationService(Observable):
 
     def attach(self, observer: Observer):
         self._observers.add(observer)
-        logger.debug(f"{self._parent_service} attached observer {observer}")
+        logger.debug(f"{self} attached observer {observer}")
 
     def detach(self, observer: Observer):
         self._observers.remove(observer)
-        logger.debug(f"{self._parent_service} detached observer {observer}")
+        logger.debug(f"{self} detached observer {observer}")
 
     def notify(self):
         for observer in self._observers:
             observer.update(self)
+
+    def __str__(self):
+        return f"RegistrationService(parent_service={self._parent_service})"

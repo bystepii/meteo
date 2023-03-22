@@ -34,7 +34,7 @@ class LoadBalancer(Observer):
         self._channels = {address: grpc.insecure_channel(address) for address in addresses}
 
     def send_meteo_data(self, meteo_data: RawMeteoData):
-        logging.debug(f"Received meteo data {meteo_data}")
+        logging.debug(f"Received meteo data \"{meteo_data}\"")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
@@ -42,7 +42,7 @@ class LoadBalancer(Observer):
         stub.ProcessMeteoData(meteo_data)
 
     def send_pollution_data(self, pollution_data: RawPollutionData):
-        logging.debug(f"Received pollution data {pollution_data}")
+        logging.debug(f"Received pollution data \"{pollution_data}\"")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
@@ -79,6 +79,8 @@ class RandomLoadBalancingStrategy(LoadBalancingStrategy):
         self._addresses = addresses
 
     def get_address(self) -> str:
+        if not self._addresses or len(self._addresses) == 0:
+            raise ValueError("No servers available")
         return random.choice(self._addresses)
 
     def update(self, addresses: Sequence[str]):
@@ -95,6 +97,8 @@ class RoundRobinLoadBalancingStrategy(LoadBalancingStrategy):
         self._index = 0
 
     def get_address(self) -> str:
+        if not self._addresses or len(self._addresses) == 0:
+            raise ValueError("No servers available")
         address = self._addresses[self._index]
         self._index = (self._index + 1) % len(self._addresses)
         return address

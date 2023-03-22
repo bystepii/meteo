@@ -14,9 +14,7 @@ class MeteoService:
         self._registration_service = registration_service
 
     def send_meteo_data(self, meteo_data: RawMeteoData):
-        logger.debug(f"Received meteo data {meteo_data}")
         self._load_balancer.send_meteo_data(meteo_data)
 
     def send_pollution_data(self, pollution_data: RawPollutionData):
-        logger.debug(f"Received pollution data {pollution_data}")
         self._load_balancer.send_pollution_data(pollution_data)

@@ -68,6 +68,7 @@ def main(debug: bool = False, log_level: str = 'info', port: Optional[int] = Non
     server.start()
 
     logger.info("gRPC server started successfully")
+    logger.info(f"Listening on port {port}")
 
     # Keep the server running
     try:
