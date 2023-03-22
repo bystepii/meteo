@@ -4,3 +4,19 @@ services:
     build:
         context: .
         dockerfile: load_balancer/Dockerfile
+    environment:
+      - PORT=8080
+  sensor1:
+    image: meteo/sensor
+    build:
+        context: .
+        dockerfile: sensor/Dockerfile
+    environment:
+      - METEO_SERVICE_ADDRESS="load-balancer:8080"
+  sensor2:
+    image: meteo/sensor
+    build:
+        context: .
+        dockerfile: sensor/Dockerfile
+    environment:
+      - METEO_SERVICE_ADDRESS="load-balancer:8080"

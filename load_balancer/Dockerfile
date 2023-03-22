@@ -13,6 +13,10 @@ COPY proto/services/processing /app/proto/services/processing
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache \
+    if [ -f load_balancer/requirements.txt ]; then \
+        pip install -r load_balancer/requirements.txt; \
+    fi
 
 RUN python -m grpc_tools.protoc -I./ --python_out=. \
     --grpc_python_out=. --pyi_out=. \

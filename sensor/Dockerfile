@@ -1,4 +1,4 @@
-FROM python:alpine
+FROM python:slim
 
 RUN mkdir /app
 COPY sensor /app/sensor
@@ -11,6 +11,10 @@ COPY proto/services/meteo /app/proto/services/meteo
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache \
+      if [ -f sensor/requirements.txt ]; then \
+        pip install -r sensor/requirements.txt; \
+    fi
 
 RUN python -m grpc_tools.protoc -I./ --python_out=. \
     --grpc_python_out=. --pyi_out=. \
