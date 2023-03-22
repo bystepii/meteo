@@ -2,3 +2,6 @@ grpcio
 grpcio-tools
 types-protobuf
 protobuf
+click
+numpy
+scipy
