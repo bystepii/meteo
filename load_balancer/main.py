@@ -10,7 +10,7 @@ import grpc
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.registration_service import RegistrationService
 from common.registration_service_servicer import RegistrationServiceServicer
-from load_balancer.lb import LoadBalancer
+from load_balancer.load_balancer import LoadBalancer
 from load_balancer.meteo_service import MeteoService
 from load_balancer.meteo_service_servicer import MeteoServiceServicer
 from proto.services.meteo import meteo_service_pb2_grpc
