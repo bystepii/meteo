@@ -8,7 +8,7 @@ from typing import Sequence
 import grpc
 
 from common.observer import Observer
-from common.registration_service import RegistrationService
+from common.registration_service import RegistrationService, Address
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
 from proto.services.processing.processing_service_pb2_grpc import ProcessingServiceStub
 
@@ -24,14 +24,13 @@ class LoadBalancer(Observer):
         self._strategy = strategy or RoundRobinLoadBalancingStrategy(list(registration_service.get_addresses()))
         self._channels = {}
         self._index = 0
-
         registration_service.attach(self)
 
     def update(self, subject: RegistrationService):
-        addresses = subject.get_addresses()
+        addresses = list(subject.get_addresses())
         logging.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
-        self._strategy.update(list(addresses))
-        self._channels = {address: grpc.insecure_channel(address) for address in addresses}
+        self._strategy.update(addresses)
+        self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
 
     def send_meteo_data(self, meteo_data: RawMeteoData):
         logging.debug(f"Received meteo data \"{meteo_data}\"")
@@ -56,14 +55,14 @@ class LoadBalancingStrategy(ABC):
     """
 
     @abstractmethod
-    def get_address(self) -> str:
+    def get_address(self) -> Address:
         """
         Returns the address to send the next request to.
         """
         pass
 
     @abstractmethod
-    def update(self, addresses: Sequence[str]):
+    def update(self, addresses: Sequence[Address]):
         """
         Updates the list of addresses.
         """
@@ -75,15 +74,15 @@ class RandomLoadBalancingStrategy(LoadBalancingStrategy):
     A load balancing strategy that chooses a random address from the list of addresses.
     """
 
-    def __init__(self, addresses: Sequence[str]):
+    def __init__(self, addresses: Sequence[Address]):
         self._addresses = addresses
 
-    def get_address(self) -> str:
+    def get_address(self) -> Address:
         if not self._addresses or len(self._addresses) == 0:
             raise ValueError("No servers available")
         return random.choice(self._addresses)
 
-    def update(self, addresses: Sequence[str]):
+    def update(self, addresses: Sequence[Address]):
         self._addresses = addresses
 
 
@@ -92,16 +91,16 @@ class RoundRobinLoadBalancingStrategy(LoadBalancingStrategy):
     A load balancing strategy that rotates through a list of addresses.
     """
 
-    def __init__(self, addresses: Sequence[str]):
+    def __init__(self, addresses: Sequence[Address]):
         self._addresses = addresses
         self._index = 0
 
-    def get_address(self) -> str:
+    def get_address(self) -> Address:
         if not self._addresses or len(self._addresses) == 0:
             raise ValueError("No servers available")
         address = self._addresses[self._index]
         self._index = (self._index + 1) % len(self._addresses)
         return address
 
-    def update(self, addresses: Sequence[str]):
+    def update(self, addresses: Sequence[Address]):
         self._addresses = addresses

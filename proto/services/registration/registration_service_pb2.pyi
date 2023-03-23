@@ -5,11 +5,15 @@ from typing import ClassVar as _ClassVar, Optional as _Optional
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class Address(_message.Message):
-    __slots__ = ["address"]
+class RegisterRequest(_message.Message):
+    __slots__ = ["address", "port", "uid"]
     ADDRESS_FIELD_NUMBER: _ClassVar[int]
+    PORT_FIELD_NUMBER: _ClassVar[int]
+    UID_FIELD_NUMBER: _ClassVar[int]
     address: str
-    def __init__(self, address: _Optional[str] = ...) -> None: ...
+    port: int
+    uid: str
+    def __init__(self, uid: _Optional[str] = ..., address: _Optional[str] = ..., port: _Optional[int] = ...) -> None: ...
 
 class RegisterResponse(_message.Message):
     __slots__ = ["error_message", "success"]
@@ -18,3 +22,9 @@ class RegisterResponse(_message.Message):
     error_message: str
     success: bool
     def __init__(self, success: bool = ..., error_message: _Optional[str] = ...) -> None: ...
+
+class UID(_message.Message):
+    __slots__ = ["uid"]
+    UID_FIELD_NUMBER: _ClassVar[int]
+    uid: str
+    def __init__(self, uid: _Optional[str] = ...) -> None: ...
