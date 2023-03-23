@@ -7,6 +7,7 @@ from typing import Sequence
 
 import grpc
 
+from common.log import format_proto_msg
 from common.observer import Observer
 from common.registration_service import RegistrationService, Address
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
@@ -33,7 +34,7 @@ class LoadBalancer(Observer):
         self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
 
     def send_meteo_data(self, meteo_data: RawMeteoData):
-        logging.debug(f"Received meteo data \"{meteo_data}\"")
+        logging.debug(f"Received meteo data {format_proto_msg(meteo_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
@@ -41,7 +42,7 @@ class LoadBalancer(Observer):
         stub.ProcessMeteoData(meteo_data)
 
     def send_pollution_data(self, pollution_data: RawPollutionData):
-        logging.debug(f"Received pollution data \"{pollution_data}\"")
+        logging.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)

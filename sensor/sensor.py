@@ -5,6 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from enum import Enum
 
+from common.log import format_proto_msg
 from common.meteo_utils import MeteoDataDetector
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
 from proto.services.meteo.meteo_service_pb2_grpc import MeteoServiceStub
@@ -79,15 +80,15 @@ class AirQualitySensor(Sensor):
         data.timestamp.GetCurrentTime()
         data.humidity = air['humidity']
         data.temperature = air['temperature']
-        logger.debug(f"{self} generated data {data}")
+        logger.debug(f"{self} obtained meteo data {format_proto_msg(data)}")
         return data
 
     def send_data(self, data: RawMeteoData):
-        logger.debug(f"{self} sending data {data} to meteo service")
+        logger.debug(f"{self} sending meteo data {format_proto_msg(data)} to meteo service")
         try:
             self._meteo.SendMeteoData(data)
         except Exception as e:
-            logger.error(f"{self} failed to send data \"{data}\" to meteo service: {e}")
+            logger.error(f"{self} failed to send meteo data {format_proto_msg(data)} to meteo service: {e}")
 
 
 class PollutionSensor(Sensor):
@@ -106,15 +107,15 @@ class PollutionSensor(Sensor):
         pollution = self._detector.analyze_pollution()
         data.timestamp.GetCurrentTime()
         data.co2 = pollution['co2']
-        logger.debug(f"{self} generated data {data}")
+        logger.debug(f"{self} obtained pollution data {format_proto_msg(data)}")
         return data
 
     def send_data(self, data: RawPollutionData):
-        logger.debug(f"{self} sending data {data} to meteo service")
+        logger.debug(f"{self} sending pollution data {format_proto_msg(data)} to meteo service")
         try:
             self._meteo.SendPollutionData(data)
         except Exception as e:
-            logger.error(f"{self} failed to send data \"{data}\" to meteo service: {e}")
+            logger.error(f"{self} failed to send pollution data {format_proto_msg(data)} to meteo service: {e}")
 
 
 def create_sensor(

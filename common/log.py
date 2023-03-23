@@ -2,6 +2,8 @@ import logging
 import os
 from logging import config
 
+from google.protobuf.message import Message
+
 LOGGER_LEVEL = 'info'
 LOGGER_STREAM = 'ext://sys.stderr'
 LOGGER_FORMAT = "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)s -- %(message)s"
@@ -61,3 +63,11 @@ def setup_logger(
         config_dict['loggers']['']['handlers'] = ['file_handler']
 
     logging.config.dictConfig(config_dict)
+
+
+def format_proto_msg(msg: Message) -> str:
+    attrs = [
+        f"{k.name}={format_proto_msg(v) if k.message_type and k.message_type.name == 'Timestamp' else v}"
+        for k, v in msg.ListFields()
+    ]
+    return f"{msg.__class__.__name__}({', '.join(attrs)})"
