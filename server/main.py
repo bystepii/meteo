@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import time
 import uuid
 from concurrent import futures
@@ -18,7 +19,7 @@ from server.processing_service_servicer import ProcessingServiceServicer
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_PORT = 50052
+DEFAULT_PORT = random.randint(50000, 60000)
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
