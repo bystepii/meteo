@@ -12,7 +12,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache \
     pip install -r requirements.txt
 RUN --mount=type=cache,target=/root/.cache \
-      if [ -f sensor/requirements.txt ]; then \
+    if [ -f sensor/requirements.txt ]; then \
         pip install -r sensor/requirements.txt; \
     fi
 
