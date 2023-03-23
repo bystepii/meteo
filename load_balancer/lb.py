@@ -49,6 +49,9 @@ class LoadBalancer(Observer):
         logging.debug(f"Sending pollution data to {address}")
         stub.ProcessPollutionData(pollution_data)
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(strategy={self._strategy})"
+
 
 class LoadBalancingStrategy(ABC):
     """
@@ -68,6 +71,9 @@ class LoadBalancingStrategy(ABC):
         Updates the list of addresses.
         """
         pass
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
 
 
 class RandomLoadBalancingStrategy(LoadBalancingStrategy):
