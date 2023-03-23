@@ -23,7 +23,7 @@ DEFAULT_PORT = random.randint(50000, 60000)
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.argument('load-balancer-address', type=str)
+@click.argument('load-balancer-address', type=str, required=False)
 @click.option('--self-address', type=str, help="Set the self address")
 @click.option('--debug', is_flag=True, help="Enable debug logging")
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),

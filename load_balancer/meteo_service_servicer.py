@@ -3,7 +3,7 @@ import logging
 from google.protobuf.empty_pb2 import Empty
 from grpc import ServicerContext
 
-from load_balancer.meteo_service import MeteoService
+from meteo_service import MeteoService
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
 from proto.services.meteo import meteo_service_pb2_grpc
 

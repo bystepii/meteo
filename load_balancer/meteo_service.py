@@ -1,7 +1,7 @@
 import logging
 
 from common.registration_service import RegistrationService
-from load_balancer.load_balancer import LoadBalancer
+from load_balancer import LoadBalancer
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
 
 logger = logging.getLogger(__name__)
