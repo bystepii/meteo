@@ -24,6 +24,7 @@ class Sensor(ABC):
             self,
             sensor_id: str,
             sensor_type: SensorType,
+            detector: MeteoDataDetector,
             meteo: MeteoServiceStub,
             interval: int = DEFAULT_INTERVAL
     ):
@@ -31,9 +32,9 @@ class Sensor(ABC):
             raise ValueError("Sensor id must be provided")
         self._sensor_id = sensor_id
         self._sensor_type = sensor_type
+        self._detector = detector
         self._meteo = meteo
         self._interval = interval
-        self._detector = MeteoDataDetector()
 
     @property
     def sensor_id(self) -> str:
@@ -62,8 +63,14 @@ class Sensor(ABC):
 
 
 class AirQualitySensor(Sensor):
-    def __init__(self, sensor_id: str, meteo: MeteoServiceStub, interval: int = DEFAULT_INTERVAL):
-        super().__init__(sensor_id, SensorType.AirQuality, meteo, interval)
+    def __init__(
+            self,
+            sensor_id: str,
+            detector: MeteoDataDetector,
+            meteo: MeteoServiceStub,
+            interval: int = DEFAULT_INTERVAL
+    ):
+        super().__init__(sensor_id, SensorType.AirQuality, detector, meteo, interval)
         logger.info(f"Initializing {self}")
 
     def get_data(self) -> RawMeteoData:
@@ -84,8 +91,14 @@ class AirQualitySensor(Sensor):
 
 
 class PollutionSensor(Sensor):
-    def __init__(self, sensor_id: str, meteo: MeteoServiceStub, interval: int = DEFAULT_INTERVAL):
-        super().__init__(sensor_id, SensorType.Pollution, meteo, interval)
+    def __init__(
+            self,
+            sensor_id: str,
+            detector: MeteoDataDetector,
+            meteo: MeteoServiceStub,
+            interval: int = DEFAULT_INTERVAL
+    ):
+        super().__init__(sensor_id, SensorType.Pollution, detector, meteo, interval)
         logger.info(f"Initializing {self}")
 
     def get_data(self) -> RawPollutionData:
@@ -104,10 +117,15 @@ class PollutionSensor(Sensor):
             logger.error(f"{self} failed to send data \"{data}\" to meteo service: {e}")
 
 
-def create_sensor(sensor_id: str, sensor_type: SensorType, meteo: MeteoServiceStub) -> Sensor:
+def create_sensor(
+        sensor_id: str,
+        sensor_type: SensorType,
+        detector: MeteoDataDetector,
+        meteo: MeteoServiceStub
+) -> Sensor:
     if sensor_type == SensorType.AirQuality:
-        return AirQualitySensor(sensor_id, meteo)
+        return AirQualitySensor(sensor_id, detector, meteo)
     elif sensor_type == SensorType.Pollution:
-        return PollutionSensor(sensor_id, meteo)
+        return PollutionSensor(sensor_id, detector, meteo)
     else:
         raise ValueError(f"Invalid sensor type {sensor_type}")

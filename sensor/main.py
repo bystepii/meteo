@@ -8,6 +8,7 @@ import click
 import grpc
 
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
+from common.meteo_utils import MeteoDataDetector
 from proto.services.meteo.meteo_service_pb2_grpc import MeteoServiceStub
 from sensor import SensorType, create_sensor
 
@@ -39,7 +40,7 @@ def main(
 
     meteo = MeteoServiceStub(grpc.insecure_channel(meteo_service_address))
 
-    sensor = create_sensor(sensor_id, SensorType(sensor_type), meteo)
+    sensor = create_sensor(sensor_id, SensorType(sensor_type), MeteoDataDetector(), meteo)
 
     logger.info("Starting sensor loop")
 
