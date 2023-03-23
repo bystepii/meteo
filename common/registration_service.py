@@ -27,21 +27,20 @@ class RegistrationService(Observable):
         self._index = 0
         self._observers: set[Observer] = set()
 
-    def register(self, uid: str, address: Address) -> bool:
+    def register(self, uid: str, address: Address):
         if address in self._addresses:
-            logger.warning(f"{self} tried to register already registered address {address}")
-            return False
+            logger.error(f"{self}: address {address} already registered")
+            raise ValueError(f"Address {address} already registered")
         self._addresses.add(address)
         self._addresses_by_uid[uid] = address
         logger.info(f"{self} registered address {address}")
         self.notify()
-        return True
 
     def unregister(self, uid: str):
         try:
             addr = self._addresses_by_uid[uid]
             self._addresses.remove(addr)
-            logger.info(f"{self} unregistered address {addr} with uid {uid}")
+            logger.info(f"{self}: unregistered address {addr} with uid {uid}")
             self.notify()
         except KeyError:
             pass
@@ -51,11 +50,11 @@ class RegistrationService(Observable):
 
     def attach(self, observer: Observer):
         self._observers.add(observer)
-        logger.debug(f"{self} attached observer {observer}")
+        logger.debug(f"{self}: attached observer {observer}")
 
     def detach(self, observer: Observer):
         self._observers.remove(observer)
-        logger.debug(f"{self} detached observer {observer}")
+        logger.debug(f"{self}: detached observer {observer}")
 
     def notify(self):
         for observer in self._observers:

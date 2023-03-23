@@ -48,9 +48,7 @@ def main(
     logger.info("Registering with load balancer")
     registration = RegistrationServiceStub(grpc.insecure_channel(load_balancer_address))
     uid = uuid.uuid4().hex
-    res = registration.Register(RegisterRequest(uid=uid, address=self_address, port=int(port)))
-    if not res.success:
-        raise RuntimeError("Failed to register with load balancer")
+    registration.Register(RegisterRequest(uid=uid, address=self_address, port=int(port)))
 
     # Create a gRPC server
     logger.info("Creating gRPC server")

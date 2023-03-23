@@ -19,7 +19,7 @@ class RegistrationServiceStub(object):
         self.Register = channel.unary_unary(
                 '/registration.RegistrationService/Register',
                 request_serializer=proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterRequest.SerializeToString,
-                response_deserializer=proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterResponse.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.Unregister = channel.unary_unary(
                 '/registration.RegistrationService/Unregister',
@@ -52,7 +52,7 @@ def add_RegistrationServiceServicer_to_server(servicer, server):
             'Register': grpc.unary_unary_rpc_method_handler(
                     servicer.Register,
                     request_deserializer=proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterRequest.FromString,
-                    response_serializer=proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterResponse.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'Unregister': grpc.unary_unary_rpc_method_handler(
                     servicer.Unregister,
@@ -83,7 +83,7 @@ class RegistrationService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/registration.RegistrationService/Register',
             proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterRequest.SerializeToString,
-            proto_dot_services_dot_registration_dot_registration__service__pb2.RegisterResponse.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

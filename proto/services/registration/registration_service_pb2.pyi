@@ -15,14 +15,6 @@ class RegisterRequest(_message.Message):
     uid: str
     def __init__(self, uid: _Optional[str] = ..., address: _Optional[str] = ..., port: _Optional[int] = ...) -> None: ...
 
-class RegisterResponse(_message.Message):
-    __slots__ = ["error_message", "success"]
-    ERROR_MESSAGE_FIELD_NUMBER: _ClassVar[int]
-    SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    error_message: str
-    success: bool
-    def __init__(self, success: bool = ..., error_message: _Optional[str] = ...) -> None: ...
-
 class UID(_message.Message):
     __slots__ = ["uid"]
     UID_FIELD_NUMBER: _ClassVar[int]
