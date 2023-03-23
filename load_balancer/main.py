@@ -29,9 +29,9 @@ DEFAULT_PORT = 50051
 def main(debug: bool = False, log_level: str = 'info', port: Optional[int] = None):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
 
-    logger.info("Starting load balancer")
-
     port = port or os.environ.get("PORT", DEFAULT_PORT)
+
+    logger.info("Starting load balancer")
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
