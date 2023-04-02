@@ -18,12 +18,12 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
 
     def Register(self, req: RegisterRequest, context: ServicerContext) -> Empty:
         proto, ip, port = context.peer().split(":")
-        logger.debug(f"Received register request {format_proto_msg(req)} from {context.peer()}")
+        logger.info(f"Received register request {format_proto_msg(req)} from {context.peer()}")
         addr = req.address or ip
         self._registration_service.register(req.uid, Address(address=addr, port=req.port))
         return Empty()
 
     def Unregister(self, uid: UID, context: ServicerContext) -> Empty:
-        logger.debug(f"Received unregister request {format_proto_msg(uid)} from {context.peer()}")
+        logger.info(f"Received unregister request {format_proto_msg(uid)} from {context.peer()}")
         self._registration_service.unregister(uid.uid)
         return Empty()

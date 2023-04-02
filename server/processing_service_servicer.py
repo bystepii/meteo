@@ -16,9 +16,11 @@ class ProcessingServiceServicer(processing_service_pb2_grpc.ProcessingServiceSer
         self._processing_service = processing_service
 
     def ProcessMeteoData(self, meteo_data: RawMeteoData, context: ServicerContext) -> AirWellnessCoefficient:
+        logger.info(f"{context.peer()} called ProcessMeteoData")
         air_wellness = self._processing_service.process_meteo_data(meteo_data)
         return AirWellnessCoefficient(value=air_wellness)
 
     def ProcessPollutionData(self, pollution_data: RawPollutionData, context: ServicerContext) -> PollutionCoefficient:
+        logger.info(f"{context.peer()} called ProcessPollutionData")
         pollution = self._processing_service.process_pollution_data(pollution_data)
         return PollutionCoefficient(value=pollution)
