@@ -69,7 +69,7 @@ def main(
 
     # Listen on port 50051
     logger.info("Starting gRPC server")
-    server.add_insecure_port("[::]:{}".format(port))
+    server.add_insecure_port(f"[::]:{port}")
     server.start()
 
     logger.info("gRPC server started successfully")
