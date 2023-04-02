@@ -23,12 +23,14 @@ logger = logging.getLogger(__name__)
 @click.option('--sensor-id', type=str, default=uuid.uuid4().hex, help="Set the sensor id")
 @click.option('--sensor-type', type=click.Choice([e.value for e in SensorType]),
               default=random.choice(list(SensorType)).value, help="Set the sensor type")
+@click.option('--interval', type=int, help="Set the sensor interval in ms")
 def main(
         meteo_service_address: Optional[str] = None,
         debug: bool = False,
         log_level: str = 'info',
         sensor_id: str = None,
-        sensor_type: str = None
+        sensor_type: str = None,
+        interval: int = None
 ):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
 
@@ -40,7 +42,7 @@ def main(
 
     meteo = MeteoServiceStub(grpc.insecure_channel(meteo_service_address))
 
-    sensor = create_sensor(sensor_id, SensorType(sensor_type), MeteoDataDetector(), meteo)
+    sensor = create_sensor(sensor_id, MeteoDataDetector(), meteo, SensorType(sensor_type), interval)
 
     logger.info("Starting sensor loop")
 

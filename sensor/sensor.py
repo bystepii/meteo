@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+import random
 import time
 from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Optional
 
 from common.log import format_proto_msg
 from common.meteo_utils import MeteoDataDetector
@@ -12,7 +14,7 @@ from proto.services.meteo.meteo_service_pb2_grpc import MeteoServiceStub
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_INTERVAL = 1
+DEFAULT_INTERVAL = 1000
 
 
 class SensorType(Enum):
@@ -27,7 +29,7 @@ class Sensor(ABC):
             sensor_type: SensorType,
             detector: MeteoDataDetector,
             meteo: MeteoServiceStub,
-            interval: int = DEFAULT_INTERVAL
+            interval: Optional[int] = None
     ):
         if not sensor_id:
             raise ValueError("Sensor id must be provided")
@@ -35,7 +37,7 @@ class Sensor(ABC):
         self._sensor_type = sensor_type
         self._detector = detector
         self._meteo = meteo
-        self._interval = interval
+        self._interval = interval or DEFAULT_INTERVAL
 
     @property
     def sensor_id(self) -> str:
@@ -55,7 +57,7 @@ class Sensor(ABC):
 
     def run(self):
         while True:
-            time.sleep(self._interval)
+            time.sleep(self._interval / 1000)
             data = self.get_data()
             self.send_data(data)
 
@@ -69,7 +71,7 @@ class AirQualitySensor(Sensor):
             sensor_id: str,
             detector: MeteoDataDetector,
             meteo: MeteoServiceStub,
-            interval: int = DEFAULT_INTERVAL
+            interval: Optional[int] = None
     ):
         super().__init__(sensor_id, SensorType.AirQuality, detector, meteo, interval)
         logger.info(f"Initializing {self}")
@@ -97,7 +99,7 @@ class PollutionSensor(Sensor):
             sensor_id: str,
             detector: MeteoDataDetector,
             meteo: MeteoServiceStub,
-            interval: int = DEFAULT_INTERVAL
+            interval: Optional[int] = None
     ):
         super().__init__(sensor_id, SensorType.Pollution, detector, meteo, interval)
         logger.info(f"Initializing {self}")
@@ -120,13 +122,14 @@ class PollutionSensor(Sensor):
 
 def create_sensor(
         sensor_id: str,
-        sensor_type: SensorType,
         detector: MeteoDataDetector,
-        meteo: MeteoServiceStub
+        meteo: MeteoServiceStub,
+        sensor_type: Optional[SensorType] = random.choice(list(SensorType)),
+        interval: Optional[int] = None
 ) -> Sensor:
     if sensor_type == SensorType.AirQuality:
-        return AirQualitySensor(sensor_id, detector, meteo)
+        return AirQualitySensor(sensor_id, detector, meteo, interval)
     elif sensor_type == SensorType.Pollution:
-        return PollutionSensor(sensor_id, detector, meteo)
+        return PollutionSensor(sensor_id, detector, meteo, interval)
     else:
         raise ValueError(f"Invalid sensor type {sensor_type}")
