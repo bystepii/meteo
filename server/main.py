@@ -53,7 +53,7 @@ def main(
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor())
 
     logger.info("Creating services")
 
