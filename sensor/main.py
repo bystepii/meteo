@@ -26,11 +26,11 @@ logger = logging.getLogger(__name__)
 @click.option('--interval', type=int, help="Set the sensor interval in ms")
 def main(
         meteo_service_address: str,
+        sensor_id: str,
+        sensor_type: str,
         debug: bool = False,
         log_level: str = 'info',
-        sensor_id: str = None,
-        sensor_type: str = None,
-        interval: int = None
+        interval: Optional[int] = None
 ):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
 
