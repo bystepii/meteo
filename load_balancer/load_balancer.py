@@ -39,7 +39,7 @@ class LoadBalancer(Observer):
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logging.debug(f"Sending meteo data to {address}")
-        stub.ProcessMeteoData(meteo_data)
+        stub.ProcessMeteoData.future(meteo_data)
 
     def send_pollution_data(self, pollution_data: RawPollutionData):
         logging.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
@@ -47,7 +47,7 @@ class LoadBalancer(Observer):
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logging.debug(f"Sending pollution data to {address}")
-        stub.ProcessPollutionData(pollution_data)
+        stub.ProcessPollutionData.future(pollution_data)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(strategy={self._strategy})"
