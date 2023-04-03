@@ -6,6 +6,7 @@ services:
         dockerfile: load_balancer/Dockerfile
     environment:
       - PORT=8080
+      - LOG_LEVEL=debug
   redis:
     image: redis:alpine
     ports:
@@ -18,6 +19,7 @@ services:
     environment:
       - LOAD_BALANCER_ADDRESS=load-balancer:8080
       - REDIS_ADDRESS=redis://redis:6379
+      - LOG_LEVEL=debug
   sensor1:
     image: meteo/sensor
     build:
@@ -25,6 +27,7 @@ services:
         dockerfile: sensor/Dockerfile
     environment:
       - METEO_SERVICE_ADDRESS=load-balancer:8080
+      - LOG_LEVEL=debug
   sensor2:
     image: meteo/sensor
     build:
@@ -32,3 +35,4 @@ services:
         dockerfile: sensor/Dockerfile
     environment:
       - METEO_SERVICE_ADDRESS=load-balancer:8080
+      - LOG_LEVEL=debug
