@@ -79,13 +79,14 @@ class AirQualitySensor(Sensor):
     def get_data(self) -> RawMeteoData:
         data = RawMeteoData()
         air = self._detector.analyze_air()
-        data.timestamp.GetCurrentTime()
+        data.timestamp.FromNanoseconds(time.time_ns())
         data.humidity = air['humidity']
         data.temperature = air['temperature']
         logger.debug(f"{self} obtained meteo data {format_proto_msg(data)}")
         return data
 
     def send_data(self, data: RawMeteoData):
+        logger.info(f"{self} calling SendMeteoData")
         logger.debug(f"{self} sending meteo data {format_proto_msg(data)} to meteo service")
         try:
             self._meteo.SendMeteoData(data)
@@ -107,12 +108,13 @@ class PollutionSensor(Sensor):
     def get_data(self) -> RawPollutionData:
         data = RawPollutionData()
         pollution = self._detector.analyze_pollution()
-        data.timestamp.GetCurrentTime()
+        data.timestamp.FromNanoseconds(time.time_ns())
         data.co2 = pollution['co2']
         logger.debug(f"{self} obtained pollution data {format_proto_msg(data)}")
         return data
 
     def send_data(self, data: RawPollutionData):
+        logger.info(f"{self} calling SendPollutionData")
         logger.debug(f"{self} sending pollution data {format_proto_msg(data)} to meteo service")
         try:
             self._meteo.SendPollutionData(data)
