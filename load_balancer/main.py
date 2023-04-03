@@ -24,12 +24,14 @@ DEFAULT_PORT = 50051
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option('--debug', is_flag=True, help="Enable debug logging")
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
-              default='info', help="Set the log level")
-@click.option('--port', type=int, help="Set the port")
-def main(debug: bool = False, log_level: str = 'info', port: Optional[int] = None):
+              default=os.environ.get('LOG_LEVEL', 'info'), help="Set the log level")
+@click.option('--port', type=int, help="Set the port", default=os.environ.get("PORT", DEFAULT_PORT))
+def main(
+        log_level: str,
+        port: int,
+        debug: bool = False,
+):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
-
-    port = port or os.environ.get("PORT", DEFAULT_PORT)
 
     logger.info("Starting load balancer")
 
