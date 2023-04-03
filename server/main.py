@@ -8,6 +8,7 @@ from typing import Optional
 
 import click
 import grpc
+import redis
 
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.meteo_utils import MeteoDataProcessor
@@ -23,25 +24,30 @@ DEFAULT_PORT = random.randint(50000, 60000)
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.argument('load-balancer-address', type=str, required=False)
+@click.argument('load-balancer-address', type=str, required=False,
+                default=os.environ.get("LOAD_BALANCER_ADDRESS"))
+@click.argument('redis-address', type=str, required=False,
+                default=os.environ.get("REDIS_ADDRESS"))
 @click.option('--self-address', type=str, help="Set the self address")
 @click.option('--debug', is_flag=True, help="Enable debug logging")
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
-              default='info', help="Set the log level")
-@click.option('--port', type=int, help="Set the port")
+              default=os.environ.get('LOG_LEVEL', 'info'), help="Set the log level")
+@click.option('--port', type=int, help="Set the port", default=os.environ.get("PORT", DEFAULT_PORT))
 def main(
-        load_balancer_address: Optional[str] = None,
+        load_balancer_address: str,
+        redis_address: str,
+        port: int,
+        log_level: str,
         self_address: Optional[str] = None,
         debug: bool = False,
-        log_level: str = 'info',
-        port: Optional[int] = None
 ):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
 
-    load_balancer_address = load_balancer_address or os.environ.get("LOAD_BALANCER_ADDRESS")
     if not load_balancer_address:
         raise ValueError("Load balancer address must be provided")
-    port = port or os.environ.get("PORT", DEFAULT_PORT)
+
+    if not redis_address:
+        raise ValueError("Redis address must be provided")
 
     logger.info("Starting processing server")
 
@@ -58,7 +64,7 @@ def main(
     logger.info("Creating services")
 
     # Create ProcessingService
-    processing_service = ProcessingService(MeteoDataProcessor())
+    processing_service = ProcessingService(MeteoDataProcessor(), redis.from_url(redis_address, db=0))
 
     # Register the ProcessingService
     logger.info("Registering ProcessingServiceServicer")
