@@ -19,12 +19,12 @@ class ProcessingService:
         logger.debug(f"Processing raw meteo data {format_proto_msg(raw_meteo_data)}")
         wellness_data = self._processor.process_meteo_data(raw_meteo_data)
         logger.debug(f"Obtained wellness data \"{wellness_data}\"")
-        self._redis.zadd("wellness", {raw_meteo_data.timestamp.ToNanoseconds() / 1e9: wellness_data})
+        self._redis.zadd("wellness", {wellness_data: raw_meteo_data.timestamp.ToNanoseconds() / 1e9})
         return wellness_data
 
     def process_pollution_data(self, raw_pollution_data: RawPollutionData):
         logger.debug(f"Processing raw pollution data {format_proto_msg(raw_pollution_data)}")
         pollution_data = self._processor.process_pollution_data(raw_pollution_data)
         logger.debug(f"Obtained pollution data \"{pollution_data}\"")
-        self._redis.zadd("pollution", {raw_pollution_data.timestamp.ToNanoseconds() / 1e9: pollution_data})
+        self._redis.zadd("pollution", {pollution_data: raw_pollution_data.timestamp.ToNanoseconds() / 1e9})
         return pollution_data
