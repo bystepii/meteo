@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
               default=os.environ.get("LOG_LEVEL", "info"), help="Set the log level")
 @click.option('--sensor-id', type=str, default=uuid.uuid4().hex, help="Set the sensor id")
 @click.option('--sensor-type', type=click.Choice([e.value for e in SensorType]),
-              default=random.choice(list(SensorType)).value, help="Set the sensor type")
-@click.option('--interval', type=int, help="Set the sensor interval in ms")
+              default=os.environ.get("SENSOR_TYPE", random.choice(list(SensorType)).value), help="Set the sensor type")
+@click.option('--interval', type=int, default=os.environ.get("INTERVAL"), help="Set the sensor interval in ms")
 def main(
         meteo_service_address: str,
         sensor_id: str,
