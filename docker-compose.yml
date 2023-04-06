@@ -16,10 +16,9 @@ services:
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
   redis:
-    image: redis/redis-stack
+    image: redis:alpine
     ports:
       - "6379:6379"
-      - "8001:8001"
   server:
     image: meteo/server
     build:
