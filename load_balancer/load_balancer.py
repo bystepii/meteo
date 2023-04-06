@@ -13,6 +13,8 @@ from common.registration_service import RegistrationService, Address
 from proto.messages.meteo.meteo_messages_pb2 import RawMeteoData, RawPollutionData
 from proto.services.processing.processing_service_pb2_grpc import ProcessingServiceStub
 
+logger = logging.getLogger(__name__)
+
 
 class LoadBalancer(Observer):
     """
@@ -20,7 +22,7 @@ class LoadBalancer(Observer):
     """
 
     def __init__(self, registration_service: RegistrationService, strategy: LoadBalancingStrategy = None):
-        logging.info("Initializing LoadBalancer")
+        logger.info("Initializing LoadBalancer")
         self._registration_service = registration_service
         self._strategy = strategy or RoundRobinLoadBalancingStrategy(list(registration_service.get_addresses()))
         self._channels = {}
@@ -29,24 +31,24 @@ class LoadBalancer(Observer):
 
     def update(self, subject: RegistrationService):
         addresses = list(subject.get_addresses())
-        logging.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
+        logger.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
         self._strategy.update(addresses)
         self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
 
     def send_meteo_data(self, meteo_data: RawMeteoData):
-        logging.debug(f"Received meteo data {format_proto_msg(meteo_data)}")
+        logger.debug(f"Received meteo data {format_proto_msg(meteo_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
-        logging.debug(f"Sending meteo data to {address}")
+        logger.debug(f"Sending meteo data to {address}")
         stub.ProcessMeteoData.future(meteo_data)
 
     def send_pollution_data(self, pollution_data: RawPollutionData):
-        logging.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
+        logger.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
-        logging.debug(f"Sending pollution data to {address}")
+        logger.debug(f"Sending pollution data to {address}")
         stub.ProcessPollutionData.future(pollution_data)
 
     def __repr__(self):
