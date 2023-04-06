@@ -20,7 +20,10 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
         proto, ip, port = context.peer().split(":")
         logger.info(f"Received register request {format_proto_msg(req)} from {context.peer()}")
         addr = req.address or ip
-        self._registration_service.register(req.uid, Address(address=addr, port=req.port))
+        self._registration_service.register(
+            req.uid,
+            Address(address=addr, port=req.port, additional_info=req.additional_info)
+        )
         return Empty()
 
     def Unregister(self, uid: UID, context: ServicerContext) -> Empty:

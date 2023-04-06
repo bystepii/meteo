@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from common.observer import Observable, Observer
 
@@ -9,9 +9,10 @@ logger = logging.getLogger(__name__)
 class Address(NamedTuple):
     address: str
     port: int
+    additional_info: Optional[str] = None
 
     def __repr__(self):
-        return f"{self.address}:{self.port}"
+        return f"{self.address}:{self.port}" + (f" ({self.additional_info})" if self.additional_info else "")
 
 
 class RegistrationService(Observable):
