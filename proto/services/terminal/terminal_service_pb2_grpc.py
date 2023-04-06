@@ -3,7 +3,7 @@
 import grpc
 
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
-from proto.services.terminal import termnial_service_pb2 as proto_dot_services_dot_terminal_dot_termnial__service__pb2
+from proto.services.terminal import terminal_service_pb2 as proto_dot_services_dot_terminal_dot_terminal__service__pb2
 
 
 class TerminalServiceStub(object):
@@ -18,7 +18,7 @@ class TerminalServiceStub(object):
         """
         self.SendResults = channel.unary_unary(
                 '/terminal.TerminalService/SendResults',
-                request_serializer=proto_dot_services_dot_terminal_dot_termnial__service__pb2.Results.SerializeToString,
+                request_serializer=proto_dot_services_dot_terminal_dot_terminal__service__pb2.Results.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
@@ -39,7 +39,7 @@ def add_TerminalServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendResults': grpc.unary_unary_rpc_method_handler(
                     servicer.SendResults,
-                    request_deserializer=proto_dot_services_dot_terminal_dot_termnial__service__pb2.Results.FromString,
+                    request_deserializer=proto_dot_services_dot_terminal_dot_terminal__service__pb2.Results.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
@@ -65,7 +65,7 @@ class TerminalService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/terminal.TerminalService/SendResults',
-            proto_dot_services_dot_terminal_dot_termnial__service__pb2.Results.SerializeToString,
+            proto_dot_services_dot_terminal_dot_terminal__service__pb2.Results.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
