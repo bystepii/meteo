@@ -56,7 +56,7 @@ class TumblingWindow(Observer):
         res = self._redis.zrange(key, start=start, end=end, byscore=True, withscores=True)
         logger.debug(f"Got data from redis for key {key}: {res}")
         # returns a lis of tuples (key, score) where key is the value and score is the timestamp
-        if not res:
+        if not res or len(res) == 0:
             return 0, 0
         last_time = max(res, key=lambda x: x[1])[1]
         mean = sum([float(x[0]) for x in res]) / len(res)
