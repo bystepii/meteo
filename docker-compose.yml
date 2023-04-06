@@ -7,11 +7,20 @@ services:
     environment:
       - PORT=8080
       - LOG_LEVEL=debug
+  proxy:
+    image: meteo/proxy
+    build:
+      context: .
+      dockerfile: proxy/Dockerfile
+    environment:
+      - REDIS_ADDRESS=redis://redis:6379
+      - LOG_LEVEL=debug
   redis:
-    image: redis:alpine
+    image: redis/redis-stack
     ports:
       - "6379:6379"
-  server1:
+      - "8001:8001"
+  server:
     image: meteo/server
     build:
         context: .
@@ -20,19 +29,28 @@ services:
       - LOAD_BALANCER_ADDRESS=load-balancer:8080
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
-  sensor1:
+  air-quality-sensor:
     image: meteo/sensor
     build:
         context: .
         dockerfile: sensor/Dockerfile
     environment:
+      - SENSOR_TYPE=air_quality
       - METEO_SERVICE_ADDRESS=load-balancer:8080
       - LOG_LEVEL=debug
-  sensor2:
+  pollution-sensor:
     image: meteo/sensor
     build:
         context: .
         dockerfile: sensor/Dockerfile
     environment:
+      - SENSOR_TYPE=pollution
       - METEO_SERVICE_ADDRESS=load-balancer:8080
       - LOG_LEVEL=debug
+  terminal:
+    image: meteo/terminal
+    build:
+        context: .
+        dockerfile: terminal/Dockerfile
+    environment:
+      - PROXY_ADDRESS=proxy:8080
