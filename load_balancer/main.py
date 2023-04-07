@@ -2,7 +2,6 @@ import logging
 import os
 import time
 from concurrent import futures
-from typing import Optional
 
 import click
 import grpc
