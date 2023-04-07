@@ -7,6 +7,9 @@ services:
     environment:
       - PORT=8080
       - LOG_LEVEL=debug
+    networks:
+      - server-network
+      - sensor-network
   proxy:
     image: meteo/proxy
     build:
@@ -15,10 +18,15 @@ services:
     environment:
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
+    networks:
+      - server-network
+      - terminal-network
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+    networks:
+      - server-network
   server:
     image: meteo/server
     build:
@@ -28,6 +36,8 @@ services:
       - LOAD_BALANCER_ADDRESS=load-balancer:8080
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
+    networks:
+      - server-network
   air-quality-sensor:
     image: meteo/sensor
     build:
@@ -37,6 +47,8 @@ services:
       - SENSOR_TYPE=air_quality
       - METEO_SERVICE_ADDRESS=load-balancer:8080
       - LOG_LEVEL=debug
+    networks:
+      - sensor-network
   pollution-sensor:
     image: meteo/sensor
     build:
@@ -46,6 +58,8 @@ services:
       - SENSOR_TYPE=pollution
       - METEO_SERVICE_ADDRESS=load-balancer:8080
       - LOG_LEVEL=debug
+    networks:
+      - sensor-network
   terminal:
     image: meteo/terminal
     build:
@@ -53,3 +67,13 @@ services:
         dockerfile: terminal/Dockerfile
     environment:
       - PROXY_ADDRESS=proxy:8080
+      - LOG_LEVEL=debug
+    networks:
+      - terminal-network
+networks:
+  server-network:
+    driver: bridge
+  terminal-network:
+    driver: bridge
+  sensor-network:
+    driver: bridge
