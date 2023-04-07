@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class ProcessingService:
     def __init__(self, processor: MeteoDataProcessor, redis: Redis, store_strategy: Optional[StoreStrategy] = None):
-        logger.info("Initializing MeteoService")
+        logger.info("Initializing ProcessingService")
         self._processor = processor
         self._store = store_strategy or SortedSetStoreStrategy(redis)
 
