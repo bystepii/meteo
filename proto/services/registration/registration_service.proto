@@ -11,10 +11,10 @@ import "google/protobuf/empty.proto";
 service RegistrationService {
 
   // Register a server or terminal
-  rpc Register(RegisterRequest) returns (google.protobuf.Empty) {}
+  rpc Register(RegisterRequest) returns (google.protobuf.Empty);
 
   // Unregister a server or terminal
-  rpc Unregister(UID) returns (google.protobuf.Empty) {}
+  rpc Unregister(UID) returns (google.protobuf.Empty);
 }
 
 message RegisterRequest {

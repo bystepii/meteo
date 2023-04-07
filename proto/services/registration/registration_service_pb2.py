@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n6proto/services/registration/registration_service.proto\x12\x0cregistration\x1a\x1bgoogle/protobuf/empty.proto\"V\n\x0fRegisterRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\r\x12\x17\n\x0f\x61\x64\x64itional_info\x18\x04 \x01(\t\"\x12\n\x03UID\x12\x0b\n\x03uid\x18\x01 \x01(\t2\x95\x01\n\x13RegistrationService\x12\x43\n\x08Register\x12\x1d.registration.RegisterRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x39\n\nUnregister\x12\x11.registration.UID\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n6proto/services/registration/registration_service.proto\x12\x0cregistration\x1a\x1bgoogle/protobuf/empty.proto\"V\n\x0fRegisterRequest\x12\x0b\n\x03uid\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\r\x12\x17\n\x0f\x61\x64\x64itional_info\x18\x04 \x01(\t\"\x12\n\x03UID\x12\x0b\n\x03uid\x18\x01 \x01(\t2\x91\x01\n\x13RegistrationService\x12\x41\n\x08Register\x12\x1d.registration.RegisterRequest\x1a\x16.google.protobuf.Empty\x12\x37\n\nUnregister\x12\x11.registration.UID\x1a\x16.google.protobuf.Emptyb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'proto.services.registration.registration_service_pb2', globals())
@@ -26,5 +26,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _UID._serialized_start=189
   _UID._serialized_end=207
   _REGISTRATIONSERVICE._serialized_start=210
-  _REGISTRATIONSERVICE._serialized_end=359
+  _REGISTRATIONSERVICE._serialized_end=355
 # @@protoc_insertion_point(module_scope)
