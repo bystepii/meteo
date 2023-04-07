@@ -2,8 +2,8 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from proto.messages.meteo import meteo_messages_pb2 as proto_dot_messages_dot_meteo_dot_meteo__messages__pb2
-from proto.services.processing import processing_service_pb2 as proto_dot_services_dot_processing_dot_processing__service__pb2
 
 
 class ProcessingServiceStub(object):
@@ -19,12 +19,12 @@ class ProcessingServiceStub(object):
         self.ProcessMeteoData = channel.unary_unary(
                 '/meteo.ProcessingService/ProcessMeteoData',
                 request_serializer=proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawMeteoData.SerializeToString,
-                response_deserializer=proto_dot_services_dot_processing_dot_processing__service__pb2.AirWellnessCoefficient.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
         self.ProcessPollutionData = channel.unary_unary(
                 '/meteo.ProcessingService/ProcessPollutionData',
                 request_serializer=proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawPollutionData.SerializeToString,
-                response_deserializer=proto_dot_services_dot_processing_dot_processing__service__pb2.PollutionCoefficient.FromString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 )
 
 
@@ -52,12 +52,12 @@ def add_ProcessingServiceServicer_to_server(servicer, server):
             'ProcessMeteoData': grpc.unary_unary_rpc_method_handler(
                     servicer.ProcessMeteoData,
                     request_deserializer=proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawMeteoData.FromString,
-                    response_serializer=proto_dot_services_dot_processing_dot_processing__service__pb2.AirWellnessCoefficient.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
             'ProcessPollutionData': grpc.unary_unary_rpc_method_handler(
                     servicer.ProcessPollutionData,
                     request_deserializer=proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawPollutionData.FromString,
-                    response_serializer=proto_dot_services_dot_processing_dot_processing__service__pb2.PollutionCoefficient.SerializeToString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -83,7 +83,7 @@ class ProcessingService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/meteo.ProcessingService/ProcessMeteoData',
             proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawMeteoData.SerializeToString,
-            proto_dot_services_dot_processing_dot_processing__service__pb2.AirWellnessCoefficient.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -100,6 +100,6 @@ class ProcessingService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/meteo.ProcessingService/ProcessPollutionData',
             proto_dot_messages_dot_meteo_dot_meteo__messages__pb2.RawPollutionData.SerializeToString,
-            proto_dot_services_dot_processing_dot_processing__service__pb2.PollutionCoefficient.FromString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
