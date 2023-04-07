@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 from common.observer import Observer
 from common.registration_service import RegistrationService
 from proto.services.terminal.terminal_service_pb2 import Results
+from proto.services.terminal.terminal_service_pb2_grpc import TerminalServiceStub
 
 logger = logging.getLogger(__name__)
 
@@ -43,19 +44,22 @@ class TumblingWindow(Observer):
             assert end <= time.time()
             logger.debug(f"Running tumbling window from {last_time} to {end}")
             results = Results()
-            (results.wellness_data, wellness_timestamp), \
-                (results.pollution_data, pollution_timestamp) = await asyncio.gather(
-                    self._get_data("wellness", last_time, end),
-                    self._get_data("pollution", last_time, end),
-                )
+            (wellness_data, wellness_timestamp), (pollution_data, pollution_timestamp) = await asyncio.gather(
+                self._get_data("wellness", last_time, end),
+                self._get_data("pollution", last_time, end),
+            )
+            results.wellness_data = wellness_data
             results.wellness_timestamp.FromNanoseconds(int(wellness_timestamp * 1e9))
+            results.pollution_data = pollution_data
             results.pollution_timestamp.FromNanoseconds(int(pollution_timestamp * 1e9))
             last_time = end
-            await self.notify(results)
+            await self._send_results(results)
 
-    async def notify(self, results: Results):
-        for channel in self._channels.values():
-            channel.stub.SendResults.future(results)
+    async def _send_results(self, results: Results):
+        for address, channel in self._channels.items():
+            logger.debug(f"Sending results to {address}")
+            stub = TerminalServiceStub(channel)
+            stub.SendResults(results)
 
     async def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
         res = await self._redis.zrange(key, start=start, end=end, byscore=True, withscores=True)

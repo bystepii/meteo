@@ -81,6 +81,8 @@ async def main(
 
     _cleanup_coroutines.append(_cleanup())
 
+    await terminal_service.run()
+
     await server.wait_for_termination()
 
 
