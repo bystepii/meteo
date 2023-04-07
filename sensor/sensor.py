@@ -89,7 +89,7 @@ class AirQualitySensor(Sensor):
         logger.info(f"{self} calling SendMeteoData")
         logger.debug(f"{self} sending meteo data {format_proto_msg(data)} to meteo service")
         try:
-            self._meteo.SendMeteoData(data)
+            self._meteo.SendMeteoData.future(data)
         except Exception as e:
             logger.error(f"{self} failed to send meteo data {format_proto_msg(data)} to meteo service: {e}")
 
@@ -117,7 +117,7 @@ class PollutionSensor(Sensor):
         logger.info(f"{self} calling SendPollutionData")
         logger.debug(f"{self} sending pollution data {format_proto_msg(data)} to meteo service")
         try:
-            self._meteo.SendPollutionData(data)
+            self._meteo.SendPollutionData.future(data)
         except Exception as e:
             logger.error(f"{self} failed to send pollution data {format_proto_msg(data)} to meteo service: {e}")
 

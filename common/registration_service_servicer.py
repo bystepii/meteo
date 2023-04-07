@@ -16,17 +16,17 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
         logger.info("Initializing RegistrationServiceServicer")
         self._registration_service = registration_service
 
-    def Register(self, req: RegisterRequest, context: ServicerContext) -> Empty:
+    async def Register(self, req: RegisterRequest, context: ServicerContext) -> Empty:
         proto, ip, port = context.peer().split(":")
         logger.info(f"Received register request {format_proto_msg(req)} from {context.peer()}")
         addr = req.address or ip
-        self._registration_service.register(
+        await self._registration_service.register(
             req.uid,
             Address(address=addr, port=req.port, additional_info=req.additional_info)
         )
         return Empty()
 
-    def Unregister(self, uid: UID, context: ServicerContext) -> Empty:
+    async def Unregister(self, uid: UID, context: ServicerContext) -> Empty:
         logger.info(f"Received unregister request {format_proto_msg(uid)} from {context.peer()}")
-        self._registration_service.unregister(uid.uid)
+        await self._registration_service.unregister(uid.uid)
         return Empty()

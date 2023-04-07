@@ -28,7 +28,7 @@ class RegistrationService(Observable):
         self._index = 0
         self._observers: set[Observer] = set()
 
-    def register(self, uid: str, address: Address):
+    async def register(self, uid: str, address: Address):
         if address in self._addresses:
             logger.error(f"{self}: address {address} already registered")
             raise ValueError(f"Address {address} already registered")
@@ -37,7 +37,7 @@ class RegistrationService(Observable):
         logger.info(f"{self} registered address {address}")
         self.notify()
 
-    def unregister(self, uid: str):
+    async def unregister(self, uid: str):
         try:
             addr = self._addresses_by_uid[uid]
             self._addresses.remove(addr)

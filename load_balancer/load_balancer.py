@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 from abc import ABC, abstractmethod
 from typing import Sequence
 
-import grpc
+import grpc.aio
 
 from common.log import format_proto_msg
 from common.observer import Observer
@@ -32,23 +33,25 @@ class LoadBalancer(Observer):
         addresses = list(subject.get_addresses())
         logger.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
         self._strategy.update(addresses)
-        self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
+        self._channels = {address: grpc.aio.insecure_channel(str(address)) for address in addresses}
 
-    def send_meteo_data(self, meteo_data: RawMeteoData):
+    async def send_meteo_data(self, meteo_data: RawMeteoData):
         logger.debug(f"Received meteo data {format_proto_msg(meteo_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logger.debug(f"Sending meteo data to {address}")
-        stub.ProcessMeteoData.future(meteo_data)
+        # fire and forget
+        asyncio.ensure_future(stub.ProcessMeteoData(meteo_data))
 
-    def send_pollution_data(self, pollution_data: RawPollutionData):
+    async def send_pollution_data(self, pollution_data: RawPollutionData):
         logger.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
         address = self._strategy.get_address()
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logger.debug(f"Sending pollution data to {address}")
-        stub.ProcessPollutionData.future(pollution_data)
+        # fire and forget
+        asyncio.ensure_future(stub.ProcessPollutionData(pollution_data))
 
     def __repr__(self):
         return f"{self.__class__.__name__}(strategy={self._strategy})"

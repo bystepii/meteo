@@ -15,12 +15,12 @@ class MeteoServiceServicer(meteo_service_pb2_grpc.MeteoServiceServicer):
         logger.info("Initializing MeteoServiceServicer")
         self._meteo_service = meteo_service
 
-    def SendMeteoData(self, meteo_data: RawMeteoData, context: ServicerContext) -> Empty:
+    async def SendMeteoData(self, meteo_data: RawMeteoData, context: ServicerContext) -> Empty:
         logger.info(f"{context.peer()} called SendMeteoData")
-        self._meteo_service.send_meteo_data(meteo_data)
+        await self._meteo_service.send_meteo_data(meteo_data)
         return Empty()
 
-    def SendPollutionData(self, pollution_data: RawPollutionData, context: ServicerContext) -> Empty:
+    async def SendPollutionData(self, pollution_data: RawPollutionData, context: ServicerContext) -> Empty:
         logger.info(f"{context.peer()} called SendPollutionData")
-        self._meteo_service.send_pollution_data(pollution_data)
+        await self._meteo_service.send_pollution_data(pollution_data)
         return Empty()

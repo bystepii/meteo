@@ -13,8 +13,8 @@ class MeteoService:
         self._load_balancer = load_balancer
         self._registration_service = registration_service
 
-    def send_meteo_data(self, meteo_data: RawMeteoData):
-        self._load_balancer.send_meteo_data(meteo_data)
+    async def send_meteo_data(self, meteo_data: RawMeteoData):
+        await self._load_balancer.send_meteo_data(meteo_data)
 
-    def send_pollution_data(self, pollution_data: RawPollutionData):
-        self._load_balancer.send_pollution_data(pollution_data)
+    async def send_pollution_data(self, pollution_data: RawPollutionData):
+        await self._load_balancer.send_pollution_data(pollution_data)

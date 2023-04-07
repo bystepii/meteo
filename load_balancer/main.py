@@ -1,10 +1,9 @@
+import asyncio
 import logging
 import os
-import time
-from concurrent import futures
 
-import click
-import grpc
+import asyncclick as click
+import grpc.aio
 
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.registration_service import RegistrationService
@@ -25,7 +24,7 @@ DEFAULT_PORT = 50051
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
               default=os.environ.get('LOG_LEVEL', 'info'), help="Set the log level")
 @click.option('--port', type=int, help="Set the port", default=os.environ.get("PORT", DEFAULT_PORT))
-def main(
+async def main(
         log_level: str,
         port: int,
         debug: bool = False,
@@ -36,7 +35,9 @@ def main(
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
-    server = grpc.server(futures.ThreadPoolExecutor())
+
+    global server
+    server = grpc.aio.server()
 
     logger.info("Creating services")
 
@@ -66,18 +67,24 @@ def main(
     # Listen on port 50051
     logger.info("Starting gRPC server")
     server.add_insecure_port(f"[::]:{port}")
-    server.start()
+    await server.start()
 
     logger.info("gRPC server started successfully")
     logger.info(f"Listening on port {port}")
 
-    # Keep the server running
-    try:
-        while True:
-            time.sleep(86400)
-    except KeyboardInterrupt:
-        server.stop(0)
+    await server.wait_for_termination()
 
 
 if __name__ == '__main__':
-    main()
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        logger.info("Received keyboard interrupt, shutting down gRPC server")
+        global server
+        loop.run_until_complete(server.stop(5))
+        logger.info("gRPC server shut down successfully")
+        logger.info("Shutting down asyncio loop")
+        pending = asyncio.Task.all_tasks()
+        loop.run_until_complete(asyncio.gather(*pending))
+        loop.close()

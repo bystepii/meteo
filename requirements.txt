@@ -4,3 +4,4 @@ grpc-stubs
 types-protobuf
 protobuf
 click
+asyncclick
