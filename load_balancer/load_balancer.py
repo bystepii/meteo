@@ -26,7 +26,6 @@ class LoadBalancer(Observer):
         self._registration_service = registration_service
         self._strategy = strategy or RoundRobinLoadBalancingStrategy(list(registration_service.get_addresses()))
         self._channels = {}
-        self._index = 0
         registration_service.attach(self)
 
     def update(self, subject: RegistrationService):
