@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PORT = 50051
 
+# Coroutines to be invoked when the event loop is shutting down.
+_cleanup_coroutines = []
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option('--debug', is_flag=True, help="Enable debug logging")
@@ -35,8 +38,6 @@ async def main(
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
-
-    global server
     server = grpc.aio.server()
 
     logger.info("Creating services")
@@ -72,19 +73,22 @@ async def main(
     logger.info("gRPC server started successfully")
     logger.info(f"Listening on port {port}")
 
+    async def _cleanup():
+        logger.info("Cleaning up")
+        logger.info("Shutting down gRPC server")
+        await server.stop(5)
+
+    _cleanup_coroutines.append(_cleanup())
+
     await server.wait_for_termination()
 
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        logger.info("Received keyboard interrupt, shutting down gRPC server")
-        global server
-        loop.run_until_complete(server.stop(5))
-        logger.info("gRPC server shut down successfully")
+        loop.run_until_complete(main.main())
+    finally:
+        logger.info("Received keyboard interrupt, shutting down")
+        loop.run_until_complete(*_cleanup_coroutines)
         logger.info("Shutting down asyncio loop")
-        pending = asyncio.Task.all_tasks()
-        loop.run_until_complete(asyncio.gather(*pending))
         loop.close()

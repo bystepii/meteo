@@ -10,5 +10,5 @@ class TerminalService:
     def __init__(self):
         logger.info("Initializing TerminalService")
 
-    def receive_results(self, results: Results):
+    async def receive_results(self, results: Results):
         logger.info(f"Received results: {format_proto_msg(results)}")

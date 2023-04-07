@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from google.protobuf.empty_pb2 import Empty
@@ -20,13 +21,13 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
         proto, ip, port = context.peer().split(":")
         logger.info(f"Received register request {format_proto_msg(req)} from {context.peer()}")
         addr = req.address or ip
-        await self._registration_service.register(
+        asyncio.create_task(self._registration_service.register(
             req.uid,
             Address(address=addr, port=req.port, additional_info=req.additional_info)
-        )
+        ))
         return Empty()
 
     async def Unregister(self, uid: UID, context: ServicerContext) -> Empty:
         logger.info(f"Received unregister request {format_proto_msg(uid)} from {context.peer()}")
-        await self._registration_service.unregister(uid.uid)
+        asyncio.create_task(self._registration_service.unregister(uid.uid))
         return Empty()

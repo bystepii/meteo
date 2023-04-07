@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import random
 from abc import ABC, abstractmethod
@@ -41,8 +40,7 @@ class LoadBalancer(Observer):
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logger.debug(f"Sending meteo data to {address}")
-        # fire and forget
-        asyncio.ensure_future(stub.ProcessMeteoData(meteo_data))
+        await stub.ProcessMeteoData(meteo_data)
 
     async def send_pollution_data(self, pollution_data: RawPollutionData):
         logger.debug(f"Received pollution data {format_proto_msg(pollution_data)}")
@@ -50,8 +48,7 @@ class LoadBalancer(Observer):
         channel = self._channels[address]
         stub = ProcessingServiceStub(channel)
         logger.debug(f"Sending pollution data to {address}")
-        # fire and forget
-        asyncio.ensure_future(stub.ProcessPollutionData(pollution_data))
+        await stub.ProcessPollutionData(pollution_data)
 
     def __repr__(self):
         return f"{self.__class__.__name__}(strategy={self._strategy})"

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from google.protobuf.empty_pb2 import Empty
@@ -17,10 +18,10 @@ class MeteoServiceServicer(meteo_service_pb2_grpc.MeteoServiceServicer):
 
     async def SendMeteoData(self, meteo_data: RawMeteoData, context: ServicerContext) -> Empty:
         logger.info(f"{context.peer()} called SendMeteoData")
-        await self._meteo_service.send_meteo_data(meteo_data)
+        asyncio.create_task(self._meteo_service.send_meteo_data(meteo_data))
         return Empty()
 
     async def SendPollutionData(self, pollution_data: RawPollutionData, context: ServicerContext) -> Empty:
         logger.info(f"{context.peer()} called SendPollutionData")
-        await self._meteo_service.send_pollution_data(pollution_data)
+        asyncio.create_task(self._meteo_service.send_pollution_data(pollution_data))
         return Empty()

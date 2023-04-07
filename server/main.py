@@ -1,14 +1,13 @@
+import asyncio
 import logging
 import os
 import random
-import time
 import uuid
-from concurrent import futures
 from typing import Optional
 
-import click
-import grpc
-import redis
+import asyncclick as click
+import grpc.aio
+import redis.asyncio as redis
 
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.meteo_utils import MeteoDataProcessor
@@ -22,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PORT = random.randint(50000, 60000)
 
+# Coroutines to be invoked when the event loop is shutting down.
+_cleanup_coroutines = []
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.argument('load-balancer-address', type=str, required=False,
@@ -33,7 +35,7 @@ DEFAULT_PORT = random.randint(50000, 60000)
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
               default=os.environ.get('LOG_LEVEL', 'info'), help="Set the log level")
 @click.option('--port', type=int, help="Set the port", default=os.environ.get("PORT", DEFAULT_PORT))
-def main(
+async def main(
         load_balancer_address: str,
         redis_address: str,
         port: int,
@@ -53,13 +55,15 @@ def main(
 
     # register with load balancer
     logger.info("Registering with load balancer")
+
     registration = RegistrationServiceStub(grpc.insecure_channel(load_balancer_address))
     uid = uuid.uuid4().hex
     registration.Register(RegisterRequest(uid=uid, address=self_address, port=int(port)))
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
-    server = grpc.server(futures.ThreadPoolExecutor())
+
+    server = grpc.aio.server()
 
     logger.info("Creating services")
 
@@ -73,22 +77,32 @@ def main(
         server
     )
 
-    # Listen on port 50051
+    # Listen on port
     logger.info("Starting gRPC server")
     server.add_insecure_port(f"[::]:{port}")
-    server.start()
+    await server.start()
 
     logger.info("gRPC server started successfully")
     logger.info(f"Listening on port {port}")
 
-    # Keep the server running
-    try:
-        while True:
-            time.sleep(86400)
-    except KeyboardInterrupt:
-        server.stop(0)
+    async def _cleanup():
+        logger.info("Cleaning up")
+        logger.info("Unregistering from load balancer")
         registration.Unregister(UID(uid=uid))
+        logger.info("Shutting down gRPC server")
+        await server.stop(5)
+
+    _cleanup_coroutines.append(_cleanup())
+
+    await server.wait_for_termination()
 
 
 if __name__ == '__main__':
-    main()
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main.main())
+    finally:
+        logger.info("Received keyboard interrupt, shutting down")
+        loop.run_until_complete(*_cleanup_coroutines)
+        logger.info("Shutting down asyncio loop")
+        loop.close()

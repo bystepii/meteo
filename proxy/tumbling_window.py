@@ -1,11 +1,12 @@
+import asyncio
 import logging
 import time
 from typing import Tuple, Optional
 
 import grpc
-from redis import Redis
+from redis.asyncio import Redis
 
-from common.observer import Observer, Observable
+from common.observer import Observer
 from common.registration_service import RegistrationService
 from proto.services.terminal.terminal_service_pb2 import Results
 
@@ -33,27 +34,31 @@ class TumblingWindow(Observer):
         logger.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
         self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
 
-    def run(self):
+    async def run(self):
         last_time = time.time()
+        await asyncio.sleep(5)
         while True:
-            time.sleep(self._window_interval / 1000)
+            await asyncio.sleep(self._window_interval / 1000)
             end = last_time + self._window_interval / 1000
             assert end <= time.time()
             logger.debug(f"Running tumbling window from {last_time} to {end}")
             results = Results()
-            results.wellness_data, wellness_timestamp = self._get_data("wellness", last_time, end)
+            (results.wellness_data, wellness_timestamp), \
+                (results.pollution_data, pollution_timestamp) = await asyncio.gather(
+                    self._get_data("wellness", last_time, end),
+                    self._get_data("pollution", last_time, end),
+                )
             results.wellness_timestamp.FromNanoseconds(int(wellness_timestamp * 1e9))
-            results.pollution_data, pollution_timestamp = self._get_data("pollution", last_time, end)
             results.pollution_timestamp.FromNanoseconds(int(pollution_timestamp * 1e9))
             last_time = end
-            self.notify(results)
+            await self.notify(results)
 
-    def notify(self, results: Results):
+    async def notify(self, results: Results):
         for channel in self._channels.values():
-            channel.stub.SendResults(results)
+            channel.stub.SendResults.future(results)
 
-    def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
-        res = self._redis.zrange(key, start=start, end=end, byscore=True, withscores=True)
+    async def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
+        res = await self._redis.zrange(key, start=start, end=end, byscore=True, withscores=True)
         logger.debug(f"Got data from redis for key {key}: {res}")
         # returns a lis of tuples (key, score) where key is the value and score is the timestamp
         if not res or len(res) == 0:
