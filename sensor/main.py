@@ -1,11 +1,13 @@
+import asyncio
 import logging
 import os
 import random
+import signal
 import uuid
 from typing import Optional
 
-import click
-import grpc
+import asyncclick as click
+import grpc.aio
 
 from common.log import setup_logger, LOGGER_LEVEL_CHOICES
 from common.meteo_utils import MeteoDataDetector
@@ -13,6 +15,9 @@ from proto.services.meteo.meteo_service_pb2_grpc import MeteoServiceStub
 from sensor import SensorType, create_sensor
 
 logger = logging.getLogger(__name__)
+
+# Coroutines to be invoked when the event loop is shutting down.
+_cleanup_coroutines = []
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
@@ -24,7 +29,7 @@ logger = logging.getLogger(__name__)
 @click.option('--sensor-type', type=click.Choice([e.value for e in SensorType]),
               default=os.environ.get("SENSOR_TYPE", random.choice(list(SensorType)).value), help="Set the sensor type")
 @click.option('--interval', type=int, default=os.environ.get("INTERVAL"), help="Set the sensor interval in ms")
-def main(
+async def main(
         meteo_service_address: str,
         sensor_id: str,
         sensor_type: str,
@@ -39,18 +44,40 @@ def main(
 
     logger.info(f"Starting sensor {sensor_id} of type {sensor_type}")
 
-    meteo = MeteoServiceStub(grpc.insecure_channel(meteo_service_address))
+    meteo = MeteoServiceStub(grpc.aio.insecure_channel(meteo_service_address))
 
     sensor = create_sensor(sensor_id, MeteoDataDetector(), meteo, SensorType(sensor_type), interval)
 
     logger.info("Starting sensor loop")
 
     try:
-        sensor.run()
-    except KeyboardInterrupt:
+        await sensor.run()
+    except asyncio.CancelledError:
         logger.info("Shutting down sensor")
 
 
 if __name__ == '__main__':
-    setup_logger()
-    main()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    async def _finish():
+        logger.info("Shutting down")
+        await asyncio.gather(*_cleanup_coroutines, return_exceptions=True)
+        tasks = asyncio.all_tasks() - {asyncio.current_task()}
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        logger.info("Shutting down asyncio loop")
+        loop.stop()
+        loop.close()
+        exit(0)
+
+    signals = (signal.SIGTERM, signal.SIGINT)
+    for s in signals:
+        loop.add_signal_handler(s, lambda: asyncio.create_task(_finish()))
+
+    try:
+        loop.run_until_complete(main.main())
+    finally:
+        logger.info("Received keyboard interrupt, shutting down")
+        _finish()

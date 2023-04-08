@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 import time
@@ -52,14 +53,14 @@ class Sensor(ABC):
         pass
 
     @abstractmethod
-    def send_data(self, data: RawMeteoData | RawPollutionData):
+    async def send_data(self, data: RawMeteoData | RawPollutionData):
         pass
 
-    def run(self):
+    async def run(self):
         while True:
-            time.sleep(self._interval / 1000)
+            await asyncio.sleep(self._interval / 1000)
             data = self.get_data()
-            self.send_data(data)
+            asyncio.create_task(self.send_data(data))
 
     def __repr__(self):
         return f"{self._sensor_type}(id={self._sensor_id}, interval={self._interval})"
@@ -85,11 +86,11 @@ class AirQualitySensor(Sensor):
         logger.debug(f"{self} obtained meteo data {format_proto_msg(data)}")
         return data
 
-    def send_data(self, data: RawMeteoData):
+    async def send_data(self, data: RawMeteoData):
         logger.info(f"{self} calling SendMeteoData")
         logger.debug(f"{self} sending meteo data {format_proto_msg(data)} to meteo service")
         try:
-            self._meteo.SendMeteoData.future(data)
+            await self._meteo.SendMeteoData(data)
         except Exception as e:
             logger.error(f"{self} failed to send meteo data {format_proto_msg(data)} to meteo service: {e}")
 
@@ -113,11 +114,11 @@ class PollutionSensor(Sensor):
         logger.debug(f"{self} obtained pollution data {format_proto_msg(data)}")
         return data
 
-    def send_data(self, data: RawPollutionData):
+    async def send_data(self, data: RawPollutionData):
         logger.info(f"{self} calling SendPollutionData")
         logger.debug(f"{self} sending pollution data {format_proto_msg(data)} to meteo service")
         try:
-            self._meteo.SendPollutionData.future(data)
+            await self._meteo.SendPollutionData(data)
         except Exception as e:
             logger.error(f"{self} failed to send pollution data {format_proto_msg(data)} to meteo service: {e}")
 
