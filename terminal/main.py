@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import random
+import signal
 import uuid
 from typing import Optional
 
@@ -93,10 +94,25 @@ async def main(
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    async def _finish():
+        logger.info("Shutting down")
+        await asyncio.gather(*_cleanup_coroutines, return_exceptions=True)
+        tasks = asyncio.all_tasks() - {asyncio.current_task()}
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        logger.info("Shutting down asyncio loop")
+        loop.stop()
+        loop.close()
+        exit(0)
+
+    signals = (signal.SIGTERM, signal.SIGINT)
+    for s in signals:
+        loop.add_signal_handler(s, lambda: asyncio.create_task(_finish()))
+
     try:
-        asyncio.run(main.main())
+        loop.run_until_complete(main.main())
     finally:
         logger.info("Received keyboard interrupt, shutting down")
-        loop.run_until_complete(*_cleanup_coroutines)
-        logger.info("Shutting down asyncio loop")
-        loop.close()
+        _finish()
