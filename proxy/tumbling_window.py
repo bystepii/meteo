@@ -93,7 +93,7 @@ class TumblingWindow(Observer):
         for address, channel in self._channels[interval].items():
             logger.debug(f"Sending results to {address}")
             stub = TerminalServiceStub(channel)
-            stub.SendResults(results)
+            stub.SendResults.future(results)
 
     async def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
         res = await self._store.get(key, start, end)
