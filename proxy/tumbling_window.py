@@ -8,6 +8,7 @@ from redis.asyncio import Redis
 
 from common.observer import Observer
 from common.registration_service import RegistrationService
+from common.store_strategy import StoreStrategy, SortedSetStoreStrategy
 from proto.services.terminal.terminal_service_pb2 import Results
 from proto.services.terminal.terminal_service_pb2_grpc import TerminalServiceStub
 
@@ -23,11 +24,12 @@ class TumblingWindow(Observer):
             registration_service: RegistrationService,
             redis: Redis,
             default_window_interval: Optional[int] = None,
+            store_strategy: Optional[StoreStrategy] = None,
     ):
         logger.info(f"Creating TumblingWindow with window interval {default_window_interval}")
         self._registration_service = registration_service
-        self._default_interval = default_window_interval or DEFAULT_WINDOW_INTERVAL
-        self._redis = redis
+        self._default_window_interval = default_window_interval or DEFAULT_WINDOW_INTERVAL
+        self._store = store_strategy or SortedSetStoreStrategy(redis)
         self._channels: Dict[int, Dict[str, grpc.Channel]] = {}
         self._coroutines: Dict[int, asyncio.Task] = {}
         self._registration_service.attach(self)
@@ -53,7 +55,7 @@ class TumblingWindow(Observer):
             try:
                 interval = int(address.additional_info)
             except (TypeError, ValueError):
-                interval = self._default_interval
+                interval = self._default_window_interval
             if interval not in self._channels:
                 self._channels[interval] = {}
             self._channels[interval][address.address] = grpc.insecure_channel(
@@ -94,7 +96,7 @@ class TumblingWindow(Observer):
             stub.SendResults(results)
 
     async def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
-        res = await self._redis.zrange(key, start=start, end=end, byscore=True, withscores=True)
+        res = await self._store.get(key, start, end)
         logger.debug(f"Got data from redis for key {key}: {res}")
         # returns a lis of tuples (key, score) where key is the value and score is the timestamp
         if not res or len(res) == 0:
