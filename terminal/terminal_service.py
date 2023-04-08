@@ -24,7 +24,7 @@ class TerminalService:
         self._plot_process = None
 
     async def receive_results(self, results: Results):
-        logger.info(f"Received results: {format_proto_msg(results)}")
+        logger.debug(f"Received results: {format_proto_msg(results)}")
         if results.wellness_timestamp.ToNanoseconds() != 0:
             self._wellness_data_deque.append((
                 results.wellness_timestamp.ToDatetime().strftime('%H:%M:%S.%f'),
@@ -47,7 +47,7 @@ class TerminalService:
     def plot_data(self, wellness_data: Queue, pollution_data: Queue):
         self._wellness_data = wellness_data
         self._pollution_data = pollution_data
-        logger.info("Plotting data")
+        logger.debug("Plotting data")
         fig, (ax1, ax2) = plt.subplots(2)
 
         def animate(i):
@@ -57,7 +57,7 @@ class TerminalService:
 
             # wellness data
             w = self._wellness_data.get()
-            logger.info(f"Plotting wellness data: {w}")
+            logger.debug(f"Plotting wellness data: {w}")
             ax1.plot([x[0] for x in w], [x[1] for x in w])
             ax1.set_title("Wellness data")
             ax1.set_xlabel("Timestamp")
@@ -65,14 +65,15 @@ class TerminalService:
 
             # pollution data
             p = self._pollution_data.get()
-            logger.info(f"Plotting pollution data: {p}")
+            logger.debug(f"Plotting pollution data: {p}")
             ax2.plot([x[0] for x in p], [x[1] for x in p])
             ax2.set_title("Pollution data")
             ax2.set_xlabel("Timestamp")
             ax2.set_ylabel("Pollution")
 
             # format the plot
-            plt.xticks(rotation=45, ha='right')
+            ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right')
+            ax2.set_xticklabels(ax2.get_xticklabels(), rotation=45, ha='right')
             plt.subplots_adjust(bottom=0.30)
 
             plt.tight_layout()
