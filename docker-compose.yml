@@ -5,7 +5,7 @@ services:
         context: .
         dockerfile: load_balancer/Dockerfile
     environment:
-      - PORT=8080
+      - PORT=50051
       - LOG_LEVEL=debug
     networks:
       - server-network
@@ -16,11 +16,17 @@ services:
       context: .
       dockerfile: proxy/Dockerfile
     environment:
+      - PORT=50050
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
+    ports:
+        - "50050:50050"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    network_mode: bridge
     networks:
       - server-network
-      - terminal-network
+      - default
   redis:
     image: redis:alpine
     ports:
@@ -33,7 +39,7 @@ services:
         context: .
         dockerfile: server/Dockerfile
     environment:
-      - LOAD_BALANCER_ADDRESS=load-balancer:8080
+      - LOAD_BALANCER_ADDRESS=load-balancer:50051
       - REDIS_ADDRESS=redis://redis:6379
       - LOG_LEVEL=debug
     networks:
@@ -45,7 +51,7 @@ services:
         dockerfile: sensor/Dockerfile
     environment:
       - SENSOR_TYPE=air_quality
-      - METEO_SERVICE_ADDRESS=load-balancer:8080
+      - METEO_SERVICE_ADDRESS=load-balancer:50051
       - LOG_LEVEL=debug
     networks:
       - sensor-network
@@ -56,24 +62,12 @@ services:
         dockerfile: sensor/Dockerfile
     environment:
       - SENSOR_TYPE=pollution
-      - METEO_SERVICE_ADDRESS=load-balancer:8080
+      - METEO_SERVICE_ADDRESS=load-balancer:50051
       - LOG_LEVEL=debug
     networks:
       - sensor-network
-  terminal:
-    image: meteo/terminal
-    build:
-        context: .
-        dockerfile: terminal/Dockerfile
-    environment:
-      - PROXY_ADDRESS=proxy:8080
-      - LOG_LEVEL=debug
-    networks:
-      - terminal-network
 networks:
   server-network:
-    driver: bridge
-  terminal-network:
     driver: bridge
   sensor-network:
     driver: bridge
