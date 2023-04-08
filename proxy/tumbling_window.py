@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import time
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 import grpc
 from redis.asyncio import Redis
@@ -14,6 +14,7 @@ from proto.services.terminal.terminal_service_pb2_grpc import TerminalServiceStu
 logger = logging.getLogger(__name__)
 
 DEFAULT_WINDOW_INTERVAL = 2000
+STARTUP_DELAY = 5
 
 
 class TumblingWindow(Observer):
@@ -21,26 +22,56 @@ class TumblingWindow(Observer):
             self,
             registration_service: RegistrationService,
             redis: Redis,
-            window_interval: Optional[int] = None,
+            default_window_interval: Optional[int] = None,
     ):
-        logger.info(f"Creating TumblingWindow with window interval {window_interval}")
+        logger.info(f"Creating TumblingWindow with window interval {default_window_interval}")
         self._registration_service = registration_service
-        self._window_interval = window_interval or DEFAULT_WINDOW_INTERVAL
+        self._default_interval = default_window_interval or DEFAULT_WINDOW_INTERVAL
         self._redis = redis
-        self._channels = {}
+        self._channels: Dict[int, Dict[str, grpc.Channel]] = {}
+        self._coroutines: Dict[int, asyncio.Task] = {}
         self._registration_service.attach(self)
 
     def update(self, subject: RegistrationService):
         addresses = list(subject.get_addresses())
         logger.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
-        self._channels = {address: grpc.insecure_channel(str(address)) for address in addresses}
 
-    async def run(self):
+        # cancel all coroutines
+        for interval, coroutine in self._coroutines.items():
+            coroutine.cancel()
+        self._coroutines = {}
+
+        # close all channels
+        for channels in self._channels.values():
+            for channel in channels.values():
+                channel.close()
+        self._channels = {}
+
+        # get the intervals requested by the terminals from the address additional info
+        # those with no interval requested will get the default interval
+        for address in addresses:
+            try:
+                interval = int(address.additional_info)
+            except (TypeError, ValueError):
+                interval = self._default_interval
+            if interval not in self._channels:
+                self._channels[interval] = {}
+            self._channels[interval][address.address] = grpc.insecure_channel(
+                f"{address.address}:{address.port}"
+            )
+
+        # create a coroutine for each interval if it doesn't exist
+        for interval, channels in self._channels.items():
+            if interval not in self._coroutines:
+                self._coroutines[interval] = asyncio.create_task(self._run(interval))
+
+    async def _run(self, interval: int):
+        logger.debug(f"Starting tumbling window for interval {interval}")
         last_time = time.time()
-        await asyncio.sleep(5)
+        await asyncio.sleep(STARTUP_DELAY)
         while True:
-            await asyncio.sleep(self._window_interval / 1000)
-            end = last_time + self._window_interval / 1000
+            await asyncio.sleep(interval / 1000)
+            end = last_time + interval / 1000
             assert end <= time.time()
             logger.debug(f"Running tumbling window from {last_time} to {end}")
             results = Results()
@@ -53,10 +84,11 @@ class TumblingWindow(Observer):
             results.pollution_data = pollution_data
             results.pollution_timestamp.FromNanoseconds(int(pollution_timestamp * 1e9))
             last_time = end
-            await self._send_results(results)
+            await self._send_results(results, interval)
 
-    async def _send_results(self, results: Results):
-        for address, channel in self._channels.items():
+    async def _send_results(self, results: Results, interval: int):
+        logger.debug(f"Sending results to terminals with interval {interval}")
+        for address, channel in self._channels[interval].items():
             logger.debug(f"Sending results to {address}")
             stub = TerminalServiceStub(channel)
             stub.SendResults(results)

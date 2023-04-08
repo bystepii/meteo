@@ -74,8 +74,6 @@ async def main(
 
     _cleanup_coroutines.append(_cleanup())
 
-    await tumbling_window.run()
-
     await server.wait_for_termination()
 
 

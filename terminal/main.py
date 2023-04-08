@@ -27,6 +27,7 @@ _cleanup_coroutines = []
 @click.argument('proxy-address', type=str, required=False,
                 default=os.environ.get("PROXY_ADDRESS"))
 @click.option('--self-address', type=str, help="Set the self address")
+@click.option('--interval', type=int, help="Request the specified update interval in ms")
 @click.option('--debug', is_flag=True, help="Enable debug logging")
 @click.option('--log-level', type=click.Choice(LOGGER_LEVEL_CHOICES),
               default=os.environ.get('LOG_LEVEL', 'info'), help="Set the log level")
@@ -35,6 +36,7 @@ async def main(
         proxy_address: str,
         log_level: str,
         port: int,
+        interval: Optional[int] = None,
         self_address: Optional[str] = None,
         debug: bool = False,
 ):
@@ -46,7 +48,9 @@ async def main(
     logger.info("Registering with proxy server")
     registration = RegistrationServiceStub(grpc.insecure_channel(proxy_address))
     uid = uuid.uuid4().hex
-    registration.Register(RegisterRequest(uid=uid, address=self_address, port=int(port)))
+    registration.Register(RegisterRequest(
+        uid=uid, address=self_address, port=int(port), additional_info=str(interval)
+    ))
 
     # Create a gRPC server
     logger.info("Creating gRPC server")
