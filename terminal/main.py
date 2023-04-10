@@ -43,7 +43,10 @@ async def main(
 ):
     setup_logger(log_level=logging.DEBUG if debug else log_level.upper())
 
-    logger.info("Starting load balancer")
+    if proxy_address is None:
+        raise ValueError("Proxy address is required")
+
+    logger.info("Starting terminal")
 
     # register with proxy
     logger.info("Registering with proxy server")
@@ -60,7 +63,7 @@ async def main(
     logger.info("Creating services")
 
     # Create TerminalService
-    terminal_service = TerminalService()
+    terminal_service = TerminalService(interval)
 
     # Register the TerminalService
     logger.info("Registering TerminalServiceServicer")

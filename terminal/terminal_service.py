@@ -13,8 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class TerminalService:
-    def __init__(self, max_results: int = 50):
+    def __init__(
+            self,
+            interval: int,
+            max_results: int = 50
+    ):
         logger.info("Initializing TerminalService")
+        self._interval = interval
         self._max_results = max_results
         self._wellness_data: Queue[Deque[Tuple[str, float]]] = Queue(maxsize=max_results)
         self._wellness_data_deque: Deque[Tuple[str, float]] = deque(maxlen=max_results)
@@ -78,7 +83,7 @@ class TerminalService:
 
             plt.tight_layout()
 
-        self._animation = animation.FuncAnimation(fig, animate, interval=1000)
+        self._animation = animation.FuncAnimation(fig, animate, interval=self._interval)
         plt.show()
 
     async def run(self):
