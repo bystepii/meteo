@@ -56,7 +56,7 @@ def setup_logger(
                 'handlers': ['console_handler'],
                 'level': log_level,
                 'propagate': False
-            } for k in ['common', 'load_balancer', 'proxy', 'sensor', 'server', 'terminal']
+            } for k in ['common', 'load_balancer', 'proxy', 'sensor', 'server', 'terminal', '__main__']
         }
     }
     if filename is not os.devnull:
