@@ -1,13 +1,15 @@
 import asyncio
 import logging
 import time
-from typing import Tuple, Optional, Dict
+from asyncio import Task
+from typing import Tuple, Optional, Dict, List
 
-import grpc
+import grpc.aio
+from grpc.aio import Channel
 from redis.asyncio import Redis
 
 from common.observer import Observer
-from common.registration_service import RegistrationService
+from common.registration_service import RegistrationService, Address
 from common.store_strategy import StoreStrategy, SortedSetStoreStrategy
 from proto.services.terminal.terminal_service_pb2 import Results
 from proto.services.terminal.terminal_service_pb2_grpc import TerminalServiceStub
@@ -30,24 +32,30 @@ class TumblingWindow(Observer):
         self._registration_service = registration_service
         self._default_window_interval = default_window_interval or DEFAULT_WINDOW_INTERVAL
         self._store = store_strategy or SortedSetStoreStrategy(redis)
-        self._channels: Dict[int, Dict[str, grpc.Channel]] = {}
-        self._coroutines: Dict[int, asyncio.Task] = {}
+        self._addresses: List[Address] = []
+        self._channels: Dict[int, Dict[str, Channel]] = {}
+        self._coroutines: Dict[int, Task] = {}
         self._registration_service.attach(self)
+        # create default coroutine
+        self._coroutines[self._default_window_interval] = asyncio.create_task(
+            self._run(self._default_window_interval)
+        )
+        self._channels[self._default_window_interval] = {}
 
     def update(self, subject: RegistrationService):
         addresses = list(subject.get_addresses())
         logger.debug(f"LoadBalancer received update from {subject} with addresses {addresses}")
 
-        # cancel all coroutines
-        for interval, coroutine in self._coroutines.items():
-            coroutine.cancel()
-        self._coroutines = {}
-
-        # close all channels
-        for channels in self._channels.values():
-            for channel in channels.values():
-                channel.close()
-        self._channels = {}
+        # remove channels and coroutines for addresses that are no longer registered
+        for interval, channels in self._channels.items():
+            for address in self._addresses:
+                if address not in addresses:
+                    logger.debug(f"Removing channel for {address}")
+                    del channels[address.address]
+            if not channels and interval is not self._default_window_interval:
+                logger.debug(f"Removing coroutine for interval {interval}")
+                self._coroutines[interval].cancel()
+                del self._coroutines[interval]
 
         # get the intervals requested by the terminals from the address additional info
         # those with no interval requested will get the default interval
@@ -58,14 +66,17 @@ class TumblingWindow(Observer):
                 interval = self._default_window_interval
             if interval not in self._channels:
                 self._channels[interval] = {}
-            self._channels[interval][address.address] = grpc.insecure_channel(
-                f"{address.address}:{address.port}"
-            )
+            if address.address not in self._channels[interval]:
+                self._channels[interval][address.address] = grpc.aio.insecure_channel(
+                    f"{address.address}:{address.port}"
+                )
 
         # create a coroutine for each interval if it doesn't exist
         for interval, channels in self._channels.items():
             if interval not in self._coroutines:
                 self._coroutines[interval] = asyncio.create_task(self._run(interval))
+
+        self._addresses = addresses
 
     async def _run(self, interval: int):
         logger.debug(f"Starting tumbling window for interval {interval}")
@@ -86,14 +97,14 @@ class TumblingWindow(Observer):
             results.pollution_data = pollution_data
             results.pollution_timestamp.FromNanoseconds(int(pollution_timestamp * 1e9))
             last_time = end
-            await self._send_results(results, interval)
+            asyncio.create_task(self._send_results(results, interval))
 
     async def _send_results(self, results: Results, interval: int):
         logger.debug(f"Sending results to terminals with interval {interval}")
         for address, channel in self._channels[interval].items():
             logger.debug(f"Sending results to {address}")
             stub = TerminalServiceStub(channel)
-            stub.SendResults.future(results)
+            await stub.SendResults(results)
 
     async def _get_data(self, key: str, start: float, end: float) -> Tuple[float, float]:
         res = await self._store.get(key, start, end)
