@@ -1,9 +1,9 @@
 import logging
 from collections import deque
 from multiprocessing import Process, Queue
+from threading import Thread
 from typing import Deque, Tuple
 
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
 from common.log import format_proto_msg
@@ -15,11 +15,9 @@ logger = logging.getLogger(__name__)
 class TerminalService:
     def __init__(
             self,
-            interval: int,
             max_results: int = 50
     ):
         logger.info("Initializing TerminalService")
-        self._interval = interval
         self._max_results = max_results
         self._wellness_data: Queue[Deque[Tuple[str, float]]] = Queue(maxsize=max_results)
         self._wellness_data_deque: Deque[Tuple[str, float]] = deque(maxlen=max_results)
@@ -49,45 +47,54 @@ class TerminalService:
         self._wellness_data.put(self._wellness_data_deque)
         self._pollution_data.put(self._pollution_data_deque)
 
-    def plot_data(self, wellness_data: Queue, pollution_data: Queue):
+    def _update_plot(self, wellness_data: Deque[Tuple[str, float]], pollution_data: Deque[Tuple[str, float]]):
+        # clear the plot
+        self._ax1.clear()
+        self._ax2.clear()
+
+        # wellness data
+        self._ax1.set_title("Wellness data")
+        self._ax1.set_xlabel("Timestamp")
+        self._ax1.set_ylabel("Wellness")
+
+        w = wellness_data
+        logger.debug(f"Plotting wellness data: {w}")
+        self._ax1.plot([x[0] for x in w], [x[1] for x in w])
+
+        # pollution data
+        self._ax2.set_title("Pollution data")
+        self._ax2.set_xlabel("Timestamp")
+        self._ax2.set_ylabel("Pollution")
+
+        p = pollution_data
+        logger.debug(f"Plotting pollution data: {p}")
+        self._ax2.plot([x[0] for x in p], [x[1] for x in p])
+
+        # format the plot
+        self._ax1.set_xticklabels(self._ax1.get_xticklabels(), rotation=45, ha='right')
+        self._ax2.set_xticklabels(self._ax2.get_xticklabels(), rotation=45, ha='right')
+        plt.subplots_adjust(bottom=0.30)
+        plt.tight_layout()
+
+        self._fig.canvas.draw()
+
+    def _plot_data(self, wellness_data, pollution_data):
+        logger.info("Starting plot process")
+        self._fig, (self._ax1, self._ax2) = plt.subplots(2)
+
         self._wellness_data = wellness_data
         self._pollution_data = pollution_data
-        logger.debug("Plotting data")
-        fig, (ax1, ax2) = plt.subplots(2)
 
-        def animate(i):
-            # clear the axes
-            ax1.clear()
-            ax2.clear()
+        Thread(target=self._animate).start()
 
-            # wellness data
-            w = self._wellness_data.get()
-            logger.debug(f"Plotting wellness data: {w}")
-            ax1.plot([x[0] for x in w], [x[1] for x in w])
-            ax1.set_title("Wellness data")
-            ax1.set_xlabel("Timestamp")
-            ax1.set_ylabel("Wellness")
-
-            # pollution data
-            p = self._pollution_data.get()
-            logger.debug(f"Plotting pollution data: {p}")
-            ax2.plot([x[0] for x in p], [x[1] for x in p])
-            ax2.set_title("Pollution data")
-            ax2.set_xlabel("Timestamp")
-            ax2.set_ylabel("Pollution")
-
-            # format the plot
-            ax1.set_xticklabels(ax1.get_xticklabels(), rotation=45, ha='right')
-            ax2.set_xticklabels(ax2.get_xticklabels(), rotation=45, ha='right')
-            plt.subplots_adjust(bottom=0.30)
-
-            plt.tight_layout()
-
-        self._animation = animation.FuncAnimation(fig, animate, interval=self._interval)
         plt.show()
 
-    async def run(self):
+    def _animate(self):
+        while True:
+            self._update_plot(self._wellness_data.get(), self._pollution_data.get())
+
+    def run(self):
         logger.info("Running TerminalService")
 
-        self._plot_process = Process(target=self.plot_data, args=(self._wellness_data, self._pollution_data))
+        self._plot_process = Process(target=self._plot_data, args=(self._wellness_data, self._pollution_data))
         self._plot_process.start()

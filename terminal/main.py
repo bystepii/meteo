@@ -4,6 +4,7 @@ import os
 import random
 import signal
 import uuid
+from multiprocessing import active_children
 from typing import Optional
 
 import asyncclick as click
@@ -89,7 +90,7 @@ async def main(
 
     _cleanup_coroutines.append(_cleanup())
 
-    await terminal_service.run()
+    terminal_service.run()
 
     await server.wait_for_termination()
 
@@ -100,6 +101,9 @@ if __name__ == '__main__':
 
     async def _finish():
         logger.info("Shutting down")
+        for child in active_children():
+            logger.info(f"Killing child process {child.pid}")
+            child.kill()
         await asyncio.gather(*_cleanup_coroutines, return_exceptions=True)
         tasks = asyncio.all_tasks() - {asyncio.current_task()}
         for task in tasks:
@@ -118,4 +122,3 @@ if __name__ == '__main__':
         loop.run_until_complete(main.main())
     finally:
         logger.info("Received keyboard interrupt, shutting down")
-        _finish()
