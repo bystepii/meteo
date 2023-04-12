@@ -80,6 +80,7 @@ class TumblingWindow(Observer):
 
     async def _run(self, interval: int):
         logger.debug(f"Starting tumbling window for interval {interval}")
+        background_tasks = set()
         last_time = time.time()
         await asyncio.sleep(STARTUP_DELAY)
         while True:
@@ -97,7 +98,9 @@ class TumblingWindow(Observer):
             results.pollution_data = pollution_data
             results.pollution_timestamp.FromNanoseconds(int(pollution_timestamp * 1e9))
             last_time = end
-            asyncio.create_task(self._send_results(results, interval))
+            task = asyncio.create_task(self._send_results(results, interval))
+            background_tasks.add(task)
+            task.add_done_callback(background_tasks.discard)
 
     async def _send_results(self, results: Results, interval: int):
         logger.debug(f"Sending results to terminals with interval {interval}")

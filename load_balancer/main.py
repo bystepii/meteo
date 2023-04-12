@@ -88,6 +88,7 @@ if __name__ == '__main__':
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
+
     async def _finish():
         logger.info("Shutting down")
         await asyncio.gather(*_cleanup_coroutines, return_exceptions=True)
@@ -100,12 +101,22 @@ if __name__ == '__main__':
         loop.close()
         exit(0)
 
+
+    background_tasks = set()
+
+
+    def signal_handler(sig):
+        logger.info(f"Received signal {sig}")
+        task = asyncio.create_task(_finish())
+        background_tasks.add(task)
+        task.add_done_callback(background_tasks.discard)
+
+
     signals = (signal.SIGTERM, signal.SIGINT)
     for s in signals:
-        loop.add_signal_handler(s, lambda: asyncio.create_task(_finish()))
+        loop.add_signal_handler(s, lambda: signal_handler(s))
 
     try:
         loop.run_until_complete(main.main())
     finally:
         logger.info("Received keyboard interrupt, shutting down")
-        _finish()

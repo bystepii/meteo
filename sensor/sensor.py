@@ -57,10 +57,13 @@ class Sensor(ABC):
         pass
 
     async def run(self):
+        background_tasks = set()
         while True:
             await asyncio.sleep(self._interval / 1000)
             data = self.get_data()
-            asyncio.create_task(self.send_data(data))
+            task = asyncio.create_task(self.send_data(data))
+            background_tasks.add(task)
+            task.add_done_callback(background_tasks.discard)
 
     def __repr__(self):
         return f"{self._sensor_type}(id={self._sensor_id}, interval={self._interval})"

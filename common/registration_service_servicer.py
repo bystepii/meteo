@@ -16,18 +16,23 @@ class RegistrationServiceServicer(registration_service_pb2_grpc.RegistrationServ
     def __init__(self, registration_service: RegistrationService):
         logger.info("Initializing RegistrationServiceServicer")
         self._registration_service = registration_service
+        self._background_tasks = set()
 
     async def Register(self, req: RegisterRequest, context: ServicerContext) -> Empty:
         proto, ip, port = context.peer().split(":")
         logger.info(f"Received register request {format_proto_msg(req)} from {context.peer()}")
         addr = req.address or ip
-        asyncio.create_task(self._registration_service.register(
+        task = asyncio.create_task(self._registration_service.register(
             req.uid,
             Address(address=addr, port=req.port, additional_info=req.additional_info)
         ))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
         return Empty()
 
     async def Unregister(self, uid: UID, context: ServicerContext) -> Empty:
         logger.info(f"Received unregister request {format_proto_msg(uid)} from {context.peer()}")
-        asyncio.create_task(self._registration_service.unregister(uid.uid))
+        task = asyncio.create_task(self._registration_service.unregister(uid.uid))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
         return Empty()
