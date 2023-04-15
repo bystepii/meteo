@@ -1,5 +1,6 @@
 import logging
 from collections import deque
+from datetime import datetime
 from multiprocessing import Process, Queue
 from threading import Thread
 from typing import Deque, Tuple
@@ -30,12 +31,12 @@ class TerminalService:
         logger.debug(f"Received results: {format_proto_msg(results)}")
         if results.wellness_timestamp.ToNanoseconds() != 0:
             self._wellness_data_deque.append((
-                results.wellness_timestamp.ToDatetime().strftime('%H:%M:%S.%f'),
+                datetime.fromtimestamp(results.wellness_timestamp.ToNanoseconds() / 1e9).strftime('%H:%M:%S.%f'),
                 results.wellness_data
             ))
         if results.pollution_timestamp.ToNanoseconds() != 0:
             self._pollution_data_deque.append((
-                results.pollution_timestamp.ToDatetime().strftime('%H:%M:%S.%f'),
+                datetime.fromtimestamp(results.pollution_timestamp.ToNanoseconds() / 1e9).strftime('%H:%M:%S.%f'),
                 results.pollution_data
             ))
 
