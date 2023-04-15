@@ -1,1 +1,9 @@
+grpcio
+grpcio-tools
+grpc-stubs
+types-protobuf
+protobuf
+click
+asyncclick
+anyio
 matplotlib
