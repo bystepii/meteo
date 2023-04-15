@@ -50,6 +50,7 @@ services:
         context: .
         dockerfile: sensor/Dockerfile
     environment:
+      - INTERVAL=1000
       - SENSOR_TYPE=air_quality
       - METEO_SERVICE_ADDRESS=load-balancer:50051
       - LOG_LEVEL=debug
@@ -61,6 +62,7 @@ services:
         context: .
         dockerfile: sensor/Dockerfile
     environment:
+      - INTERVAL=1000
       - SENSOR_TYPE=pollution
       - METEO_SERVICE_ADDRESS=load-balancer:50051
       - LOG_LEVEL=debug
